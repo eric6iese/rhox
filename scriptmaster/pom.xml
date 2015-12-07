@@ -2,24 +2,31 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.evermind</groupId>
-	<artifactId>scriptmaster</artifactId>
+	<artifactId>jautoit-parent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>scriptmaster</name>
-	<description>Collection of script bindings for java and nashorn</description>
+	<packaging>pom</packaging>
+	<name>jautoit-parent</name>
+	<description>Collection of autoit script bindings for java and nashorn</description>
 
-	<dependencies>
-		<dependency>
-			<groupId>com.hynnet</groupId>
-			<artifactId>jacob</artifactId>
-			<version>1.18</version>
-		</dependency>
-
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.12</version>
-		</dependency>
-	</dependencies>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.hynnet</groupId>
+				<artifactId>jacob</artifactId>
+				<version>1.18</version>
+			</dependency>
+			<dependency>
+				<groupId>com.squareup</groupId>
+				<artifactId>javawriter</artifactId>
+				<version>2.5.1</version>
+			</dependency>
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>4.12</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<build>
 		<plugins>
@@ -33,4 +40,8 @@
 			</plugin>
 		</plugins>
 	</build>
+	<modules>
+		<module>jautoit-api</module>
+		<module>jautoit-test</module>
+	</modules>
 </project>
