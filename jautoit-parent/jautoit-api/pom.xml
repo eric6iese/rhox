@@ -17,7 +17,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.squareup</groupId>
-			<artifactId>javawriter</artifactId>
+			<artifactId>javapoet</artifactId>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>

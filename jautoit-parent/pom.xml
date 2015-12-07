@@ -17,8 +17,8 @@
 			</dependency>
 			<dependency>
 				<groupId>com.squareup</groupId>
-				<artifactId>javawriter</artifactId>
-				<version>2.5.1</version>
+				<artifactId>javapoet</artifactId>
+				<version>1.4.0</version>
 			</dependency>
 			<dependency>
 				<groupId>junit</groupId>

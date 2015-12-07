@@ -11,7 +11,11 @@ import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.LibraryLoader;
 import com.jacob.com.Variant;
 
+import de.evermind.jautoit.AutoItApiWriter;
+
 public class JacobLoader {
+
+	private static boolean ARCH_64 = System.getProperty("os.arch", "").contains("64");
 
 	private static boolean initialized = false;
 
@@ -24,28 +28,41 @@ public class JacobLoader {
 			return;
 		}
 		Path tmpdir = Paths.get(System.getProperty("java.io.tmpdir"), "de.evermind.scriptmaster");
-
-		boolean x64 = System.getProperty("os.arch", "").contains("64");
-		String dllName = x64 ? "jacob-1.18-x64.dll" : "jacob-1.18-x86.dll";
-
-		Path jacobDllFile = tmpdir.resolve(dllName).toAbsolutePath();
-		if (!Files.exists(jacobDllFile)) {
-			try (InputStream is = JacobLoader.class.getResourceAsStream(dllName)) {
+		if (!Files.isDirectory(tmpdir)) {
+			try {
 				Files.createDirectories(tmpdir);
-				Files.copy(is, jacobDllFile);
 			} catch (IOException unexpected) {
 				throw new UncheckedIOException(unexpected);
 			}
 		}
 
-		System.setProperty(LibraryLoader.JACOB_DLL_PATH, jacobDllFile.toString());
+		Path jacobDll = unpackFile(tmpdir, JacobLoader.class, "jacob-1.18-x86.dll", "jacob-1.18-x64.dll");
+		// Cant load autoit externally YET. currently it still has to be installed
+		// Path autoitDll = unpackFile(tmpdir, AutoItApiWriter.class,
+		// "AutoItX3.dll", "AutoItX3_x64.dll");
+		// System.load(autoitDll.toString());
+		System.setProperty(LibraryLoader.JACOB_DLL_PATH, jacobDll.toString());
 
 		initialized = true;
+	}
+
+	private static Path unpackFile(Path dir, Class<?> base, String x86Name, String x64Name) {
+		String name = ARCH_64 ? x64Name : x86Name;
+		Path file = dir.resolve(name).toAbsolutePath();
+		if (!Files.isRegularFile(file)) {
+			try (InputStream is = base.getResourceAsStream(name)) {
+				Files.copy(is, file);
+			} catch (IOException unexpected) {
+				throw new UncheckedIOException(unexpected);
+			}
+		}
+		return file;
 	}
 
 	/**
 	 * Calls a function on an active-x component in reflection-like manner,
 	 * wrapping all parameters in variants as necessary.
+	 * 
 	 * @return the result of the operation. primitives are wrapped as necessary.
 	 */
 	public static Object invoke(ActiveXComponent ax, String methodName, Object... params) {
