@@ -11,8 +11,6 @@ import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.LibraryLoader;
 import com.jacob.com.Variant;
 
-import de.evermind.jautoit.AutoItApiWriter;
-
 public class JacobLoader {
 
 	private static boolean ARCH_64 = System.getProperty("os.arch", "").contains("64");
