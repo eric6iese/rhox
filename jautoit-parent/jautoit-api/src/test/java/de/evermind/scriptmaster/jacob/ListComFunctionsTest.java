@@ -1,5 +1,6 @@
 package de.evermind.scriptmaster.jacob;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.jacob.activeX.ActiveXComponent;
@@ -19,6 +20,7 @@ public class ListComFunctionsTest {
 		System.out.println(ax);
 	}
 
+	@Ignore
 	@Test
 	public void dispatchDynamic() {
 		int x = 300;

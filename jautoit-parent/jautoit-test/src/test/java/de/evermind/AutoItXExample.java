@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import autoitx4java.AutoItX;
+import de.evermind.jautoit.AutoItX;
 import de.evermind.scriptmaster.jacob.JacobLoader;
 
 /**
