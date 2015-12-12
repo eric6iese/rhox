@@ -1,5 +1,9 @@
-// Imports
+// Global
+var projectBase = "";
+// Comment in for Debugging in Netbeans
+// load("netbeans_debug.js");
 
+// Imports
 var JVoid = Java.type("java.lang.Void");
 var JInt = Java.type("java.lang.Integer");
 var JLong = Java.type("java.lang.Long");
@@ -26,6 +30,7 @@ var typeDispatch = ClassName.get("com.jacob.com", "Dispatch");
 var typeVariant = ClassName.get("com.jacob.com", "Variant");
 
 // Script
+var baseDir = Paths.get(projectBase);
 var CLASS = "AutoItX";
 var PACKAGE = "com.jautoit";
 
@@ -118,7 +123,7 @@ function getJavaDoc(name){
 		// no doc for this one
 		return {}; 
 	}
-	var dir = Paths.get("autoit-doc");
+	var dir = baseDir.resolve("autoit-doc");
 	Files.createDirectories(dir);
         var file = dir.resolve(fname + ".htm");
 	if (!Files.exists(file)){
@@ -162,7 +167,7 @@ function getJavaDoc(name){
 }
 
 function writeClass() {
-	var headerFile = Paths.get("src/main/js/AutoItX3.idl");	
+	var headerFile = baseDir.resolve("src/main/js/AutoItX3.idl");	
 	var text = Java.from(Files.readAllLines(headerFile, StandardCharsets.UTF_8)).
 	map(function(it) it.trim().
 			replace("[in] ", "").
@@ -191,7 +196,7 @@ function writeClass() {
 
 	var javaFile = JavaFile.builder(PACKAGE, apiClass.build()).build();
 
-	var dir = Paths.get("target/generated-sources/annotations");
+	var dir = baseDir.resolve("target/generated-sources/annotations");
 	javaFile.writeTo(dir);
 }
 
@@ -227,7 +232,7 @@ function addMethod(line) {
 	
 	var javadoc = type == "method" ? getJavaDoc(name) : {};		 
 	
-	// ... overloads für den Rest erzeugen
+	// ... overloads fÃ¼r den Rest erzeugen
 	for (var i = required; i <= paramList.length; i++){
 		apiClass.addMethod(createMethod(outType, name, paramList.slice(0, i), paramList, javadoc));
 	}
