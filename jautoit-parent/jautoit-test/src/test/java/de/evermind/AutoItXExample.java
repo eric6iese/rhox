@@ -1,11 +1,10 @@
 package de.evermind;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import de.evermind.jautoit.AutoItX;
+import com.jautoit.AutoItX;
 import de.evermind.scriptmaster.jacob.JacobLoader;
 
 /**
@@ -31,10 +30,10 @@ public class AutoItXExample {
 		x.winActivate(notepad);
 		x.winWaitActive(notepad);
 		x.send(testString);
-		assertTrue(x.winExists(notepad, testString));
+		assertEquals(1, x.winExists(notepad, testString));
 		x.winClose(notepad, testString);
 		x.winWaitActive("Editor");
 		x.send("{ALT}n");
-		assertFalse(x.winExists(notepad, testString));
+		assertEquals(0, x.winExists(notepad, testString));
 	}
 }
