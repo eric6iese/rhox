@@ -9,7 +9,7 @@ var URLClassLoader = java.net.URLClassLoader;
 
 // Add JavaPoet in SystemClassLoader
 var home = System.getProperty("user.home");
-var file = Paths.get(home, ".m2/repository", "com/squareup/javapoet/1.4.0/javapoet-1.4.0.jar")
+var file = Paths.get(home, ".m2/repository", "de\evermind\jautoit-api/0.0.1-SNAPSHOT/javapoet-1.4.0.jar")
 var url = file.toFile().toURI().toURL();
 var data = url.openStream();    
 var sysloader = ClassLoader.getSystemClassLoader(); 
