@@ -5,30 +5,42 @@
  */
 package de.evermind.scriptmaster.jacob;
 
-import com.jacob.com.ComFailException;
 import com.jacob.com.Dispatch;
 import com.jacob.com.JacobException;
 import com.jacob.com.Variant;
-import jdk.nashorn.api.scripting.AbstractJSObject;
+import jdk.nashorn.api.scripting.JSObject;
 
 /**
- *
- * @author giese
+ * Ein Knoten in einer Com-Hierarchie von Werten.
  */
-public class ComJsObject extends AbstractJSObject {
+public class ComNode {
 
     static {
         JacobLoader.initialize();
+    }
+
+    /**
+     * Baut die Verbindung zum angegebenen Com-Object auf.
+     */
+    public static ComNode connect(String name) {
+        return new ComNode(name, new Dispatch(name), null);
     }
 
     private final String desc;
     private Object dispatch;
     private final String member;
 
-    ComJsObject(String desc, Object dispatch, String member) {
+    private ComNode(String desc, Object dispatch, String member) {
         this.desc = desc;
         this.dispatch = dispatch;
         this.member = member;
+    }
+
+    private Variant var(Object in) {
+        if (in instanceof CharSequence) {
+            in = in.toString();
+        }
+        return new Variant(in);
     }
 
     private Dispatch dispatch() {
@@ -54,9 +66,10 @@ public class ComJsObject extends AbstractJSObject {
         return v.toDispatch();
     }
 
-    @Override
-    public Object call(Object thiz, Object... args) {
-        ComJsObject obj = (ComJsObject) this;
+    /**
+     * Interpretiert den aktuellen als Knoten und ruft ihn mit den Parametern auf.
+     */
+    public ComNode invoke(Object... args) {
         Variant[] vars = new Variant[args.length];
         for (int i = 0; i < vars.length; i++) {
             vars[i] = var(args[i]);
@@ -67,17 +80,21 @@ public class ComJsObject extends AbstractJSObject {
         } catch (JacobException e) {
             throw new UnsupportedOperationException(desc + " failed!", e);
         }
-        return new ComJsObject(desc + "()", v, null);
+        return new ComNode(desc + "()", v, null);
     }
 
-    @Override
-    public Object getMember(String name) {
+    /**
+     * Löst ein Sub-Member des aktuellen Knotens auf.
+     */
+    public ComNode get(String name) {
         Dispatch d = getDispatchMember();
-        return new ComJsObject(desc + "." + name, d, name);
+        return new ComNode(desc + "." + name, d, name);
     }
 
-    @Override
-    public void setMember(String name, Object value) {
+    /**
+     * Setzt den Wert des Members neu.
+     */
+    public void set(String name, Object value) {
         Dispatch d = getDispatchMember();
         Variant v = var(value);
         try {
@@ -87,42 +104,22 @@ public class ComJsObject extends AbstractJSObject {
         }
     }
 
-    @Override
-    public Object getDefaultValue(Class<?> hint) {
+    /**
+     * Liefert den Java-Wert des Com-Noten zurück.
+     */
+    public Object value() {
         Object o;
         if (dispatch instanceof Variant) {
-            o = ((Variant) dispatch).toJavaObject();
+            return ((Variant) dispatch).toJavaObject();
         } else if (member == null) {
-            o = dispatch.toString();
-        } else {
-            Variant v = get();
-            o = v.toJavaObject();
+            return dispatch.toString();
         }
-
-        if (Number.class.isInstance(hint)) {
-            if (o instanceof Number) {
-                return (Number) o;
-            } else {
-                return null;
-            }
-        }
-        return o == null ? null : o.toString();
+        Variant v = get();
+        return v.toJavaObject();
     }
 
     @Override
     public String toString() {
-        return (String) getDefaultValue(String.class);
-    }
-
-    @Override
-    public double toNumber() {
-        return ((Number) getDefaultValue(Number.class)).doubleValue();
-    }
-
-    private Variant var(Object in) {
-        if (in instanceof CharSequence) {
-            in = in.toString();
-        }
-        return new Variant(in);
+        return "ComNode(" + desc + ")";
     }
 }

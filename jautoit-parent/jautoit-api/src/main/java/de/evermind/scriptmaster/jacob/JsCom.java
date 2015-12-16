@@ -5,16 +5,61 @@
  */
 package de.evermind.scriptmaster.jacob;
 
-import com.jacob.com.Dispatch;
-import jdk.nashorn.api.scripting.JSObject;
+import jdk.nashorn.api.scripting.AbstractJSObject;
 
 /**
- *
- * @author giese
+ * Javascript-Variante des Com-Knotens.
  */
-public class JsCom {
+public class JsCom extends AbstractJSObject {
 
-    public static JSObject connect(String name) {
-        return new ComJsObject(name, new Dispatch(name), null);
+    /**
+     * Baut die Verbindung zum Com-Knoten auf.
+     */
+    public static JsCom connect(String name) {
+        return new JsCom(ComNode.connect(name));
+    }
+
+    private final ComNode node;
+
+    private JsCom(ComNode node) {
+        this.node = node;
+    }
+
+    @Override
+    public JsCom call(Object thiz, Object... args) {
+        return new JsCom(node.invoke(args));
+    }
+
+    @Override
+    public JsCom getMember(String name) {
+        return new JsCom(node.get(name));
+    }
+
+    @Override
+    public void setMember(String name, Object value) {
+        node.set(name, value);
+    }
+
+    @Override
+    public Object getDefaultValue(Class<?> hint) {
+        Object o = node.value();
+        if (Number.class.isInstance(hint)) {
+            if (o instanceof Number) {
+                return (Number) o;
+            } else {
+                return null;
+            }
+        }
+        return o == null ? null : o.toString();
+    }
+
+    @Override
+    public String toString() {
+        return (String) getDefaultValue(String.class);
+    }
+
+    @Override
+    public double toNumber() {
+        return ((Number) getDefaultValue(Number.class)).doubleValue();
     }
 }
