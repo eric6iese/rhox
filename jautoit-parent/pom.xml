@@ -66,5 +66,6 @@
     <modules>
         <module>jautoit-api</module>
         <module>jautoit-test</module>
+        <module>jautoit-aether</module>
     </modules>
 </project>
