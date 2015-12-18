@@ -1,0 +1,13 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>de.evermind</groupId>
+		<artifactId>jautoit-parent</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	<artifactId>jautoit-aether-loader</artifactId>
+	<description>Provides the basic bootstrapping for the loading of modules.
+  Its most important feature is that it hides the entire (maven-based) loader behind a separate classloader.</description>
+
+</project>
