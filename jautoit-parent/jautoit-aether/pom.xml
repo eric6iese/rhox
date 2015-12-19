@@ -14,12 +14,6 @@
 	</properties>
 
 	<dependencies>
-		<dependency>
-			<groupId>de.evermind</groupId>
-			<artifactId>jautoit-aether-loader</artifactId>
-			<version>${project.version}</version>
-			<scope>provided</scope>
-		</dependency>
 
 		<dependency>
 			<groupId>org.eclipse.aether</groupId>
@@ -79,6 +73,28 @@
 					</archive>
 				</configuration>
 			</plugin>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.6</version>
+				<configuration>
+					<descriptors>
+						<descriptor>src/assembly/aether.xml</descriptor>
+					</descriptors>
+					<appendAssemblyId>false</appendAssemblyId>
+					<attach>false</attach>
+					<finalName>${project.artifactId}</finalName>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
+
 </project>

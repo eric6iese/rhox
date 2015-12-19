@@ -12,7 +12,7 @@ import org.eclipse.aether.repository.RemoteRepository;
 /**
  * Defines the different dependency configurations for the system.
  */
-class DependencyConfiguration {
+final class DependencyConfiguration {
 
 	private final File localRepository;
 	private final List<RemoteRepository> remoteRepositories;

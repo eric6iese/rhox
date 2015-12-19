@@ -1,11 +1,12 @@
 package de.evermind.scriptmaster.aether;
 
-import java.nio.file.Path;
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.resolution.DependencyResult;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -17,7 +18,7 @@ import org.junit.Test;
  */
 public class DependencyResolverTest {
 
-	DefaultDependencyResolver sut = new DefaultDependencyResolver();
+	DependencyResolver sut = new DependencyResolver();
 	DependencyPrinter printer = new DependencyPrinter();
 
 	Dependency dep1 = Dependency.parse("org.springframework.data:spring-data-jpa:1.8.0.RELEASE");
@@ -34,7 +35,8 @@ public class DependencyResolverTest {
 
 	@Test
 	public void testResolve() throws Exception {
-		Set<Path> paths = sut.resolve(deps);
+		DependencyResult result = sut.resolveDependencies(deps);
+		Set<File> paths = sut.getFile(result);
 		paths.forEach(System.out::println);
 	}
 }

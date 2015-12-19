@@ -4,7 +4,10 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Objects;
 
-public final class Dependency {
+/**
+ * Defines the structure of dependencies.
+ */
+final class Dependency {
 
 	private final String group;
 	private final String name;
@@ -17,29 +20,36 @@ public final class Dependency {
 	 * separator.<br/>
 	 * Example:<br/>
 	 * 'org.springframework.data:spring-data-jpa:1.8.0.RELEASE' <br/>
-	 * Note: Currently, only simple combinations of group:name:version are
-	 * possible<br/>
-	 * Classifier and Type must be given manually because their format is not
-	 * yet defined.
 	 */
 	public static Dependency parse(String fullFormat) {
 		Iterator<String> parts = Arrays.asList(fullFormat.split(":")).iterator();
 		String group = parts.next();
 		String name = parts.next();
-		String version = parts.next();
-		return new Dependency(group, name, version);
+		String ext = parts.next();
+		if (!parts.hasNext()) {
+			return new Dependency(group, name, ext);
+		}
+		String classifier = parts.next();
+		if (!parts.hasNext()) {
+			return new Dependency(group, name, ext, classifier);
+		}
+		return new Dependency(group, name, ext, classifier, parts.next());
 	}
 
 	public Dependency(String group, String name, String version) {
-		this(group, name, version, "", "");
+		this(group, name, "", version);
 	}
 
-	public Dependency(String group, String name, String version, String classifier, String type) {
+	public Dependency(String group, String name, String ext, String version) {
+		this(group, name, ext, "", version);
+	}
+
+	public Dependency(String group, String name, String ext, String classifier, String version) {
 		this.group = group;
 		this.name = name;
 		this.version = version;
 		this.classifier = classifier;
-		this.ext = type;
+		this.ext = ext;
 	}
 
 	public String getGroup() {

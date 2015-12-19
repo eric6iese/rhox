@@ -18,7 +18,7 @@ import org.eclipse.aether.transfer.TransferResource;
  * Base form taken from:<br/>
  * <a href="https://github.com/eclipse/aether-demo">aether-demo</a>
  */
-class ConsoleTransferListener extends AbstractTransferListener {
+final class ConsoleTransferListener extends AbstractTransferListener {
 
 	private PrintStream out;
 

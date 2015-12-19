@@ -1,9 +1,10 @@
 package de.evermind.scriptmaster.aether;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -28,17 +29,23 @@ import org.eclipse.aether.transport.http.HttpTransporterFactory;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.filter.DependencyFilterUtils;
 
-public class DefaultDependencyResolver implements DependencyResolver {
+/**
+ * Resolves external dependencies by its resolve Method.<br/>
+ * Each of these dependencies must use the default format.
+ * 
+ * @author giese
+ */
+final class DependencyResolver {
 
 	private final DependencyConfiguration cfg;
 	private final RepositorySystem repositorySystem;
 	private final DefaultRepositorySystemSession session;
 
-	public DefaultDependencyResolver() {
+	public DependencyResolver() {
 		this(DependencyConfiguration.getMavenDefault());
 	}
 
-	public DefaultDependencyResolver(DependencyConfiguration cfg) {
+	public DependencyResolver(DependencyConfiguration cfg) {
 		this.cfg = DependencyConfiguration.getMavenDefault();
 
 		repositorySystem = newRepositorySystem();
@@ -53,17 +60,22 @@ public class DefaultDependencyResolver implements DependencyResolver {
 	}
 
 	/**
-	 * Implements the Dependency resolve mechanism with aether.
+	 * Resolves any number of dependencies, downloads them if not available, and
+	 * returns them as a Set of Files in the local repository.
+	 * 
+	 * @throws IOException
+	 *             if the resolving failed for networking, technical or
+	 *             resolving reasons.
 	 */
-	@Override
-	public Set<Path> resolve(Collection<Dependency> dependencies) throws IOException {
+	public Set<File> resolve(Collection<String> dependencies) throws IOException {
+		List<Dependency> deps = dependencies.stream().map(Dependency::parse).collect(Collectors.toList());
 		DependencyResult result;
 		try {
-			result = resolveDependencies(dependencies);
+			result = resolveDependencies(deps);
 		} catch (RepositoryException e) {
 			throw new IOException(e);
 		}
-		return getPaths(result);
+		return getFile(result);
 	}
 
 	public CollectResult collectDependencies(Collection<Dependency> dependencies) throws RepositoryException {
@@ -78,9 +90,9 @@ public class DefaultDependencyResolver implements DependencyResolver {
 		return repositorySystem.resolveDependencies(session, dependencyRequest);
 	}
 
-	public Set<Path> getPaths(DependencyResult dependencyResult) {
+	public Set<File> getFile(DependencyResult dependencyResult) {
 		return dependencyResult.getArtifactResults().stream().//
-				map(a -> a.getArtifact().getFile().toPath()).//
+				map(a -> a.getArtifact().getFile()).//
 				collect(Collectors.toCollection(LinkedHashSet::new));
 	}
 
@@ -93,8 +105,7 @@ public class DefaultDependencyResolver implements DependencyResolver {
 	}
 
 	private CollectRequest newCollectRequest(Collection<Dependency> dependencies) {
-		return new CollectRequest(
-				dependencies.stream().map(DefaultDependencyResolver::toAether).collect(Collectors.toList()), //
+		return new CollectRequest(dependencies.stream().map(DependencyResolver::toAether).collect(Collectors.toList()), //
 				null, cfg.getRemoteRepositories());
 	}
 

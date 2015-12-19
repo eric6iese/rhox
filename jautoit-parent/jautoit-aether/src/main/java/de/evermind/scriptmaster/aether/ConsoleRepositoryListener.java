@@ -10,7 +10,7 @@ import org.eclipse.aether.RepositoryEvent;
  * Base form taken from:<br/>
  * <a href="https://github.com/eclipse/aether-demo">aether-demo</a>
  */
-class ConsoleRepositoryListener extends AbstractRepositoryListener {
+final class ConsoleRepositoryListener extends AbstractRepositoryListener {
 
 	private PrintStream out;
 

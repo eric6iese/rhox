@@ -9,7 +9,7 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.graph.DependencyVisitor;
 
-class DependencyPrinter {
+final class DependencyPrinter {
 
 	/**
 	 * Writes dependencies to the given writer.
