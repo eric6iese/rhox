@@ -1,4 +1,4 @@
-package de.evermind.scriptmaster.jacob;
+package com.jjstk.combridge.jacob;
 
 import java.io.IOException;
 import java.io.InputStream;

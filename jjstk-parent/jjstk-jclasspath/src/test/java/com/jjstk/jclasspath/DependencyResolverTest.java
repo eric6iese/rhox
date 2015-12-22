@@ -1,5 +1,8 @@
-package de.evermind.scriptmaster.aether;
+package com.jjstk.jclasspath;
 
+import com.jjstk.jclasspath.Dependency;
+import com.jjstk.jclasspath.DependencyResolver;
+import com.jjstk.jclasspath.DependencyPrinter;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;

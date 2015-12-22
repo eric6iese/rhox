@@ -1,5 +1,6 @@
-package de.evermind.scriptmaster.jacob;
+package com.jjstk.combridge.jacob;
 
+import com.jjstk.combridge.jacob.JacobLoader;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -16,7 +17,7 @@ public class ListComFunctionsTest {
 	public void printAutoit() {
 		// TODO: Herausfinden wie man an einem COM-Objekt die Methoden
 		// herausbekommt
-		// Nächster Stop: OLEVIEWER
+		// Nï¿½chster Stop: OLEVIEWER
 		System.out.println(ax);
 	}
 

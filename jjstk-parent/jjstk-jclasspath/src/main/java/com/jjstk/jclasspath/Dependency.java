@@ -1,4 +1,4 @@
-package de.evermind.scriptmaster.aether;
+package com.jjstk.jclasspath;
 
 import java.util.Arrays;
 import java.util.Iterator;
