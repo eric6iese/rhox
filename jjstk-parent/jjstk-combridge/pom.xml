@@ -2,12 +2,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>de.evermind</groupId>
-        <artifactId>jautoit-parent</artifactId>
+        <groupId>com.jjstk</groupId>
+        <artifactId>jjstk-parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>jautoit-api</artifactId>
-    <name>jautoit-api</name>
+    <artifactId>jjstk-combridge</artifactId>
     <description>ApiGenerator of JAutoit</description>
 
     <dependencies>
@@ -80,7 +79,7 @@
                             <arguments>
                                 <argument>-cp</argument>
                                 <argument>${maven.compile.classpath}</argument>
-                                <argument>src/main/js/generate_autoitx.js</argument>
+                                <argument>src/main/javascript/generate_autoitx.js</argument>
                             </arguments>
                         </configuration>
                     </execution>

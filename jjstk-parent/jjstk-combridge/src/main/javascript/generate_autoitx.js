@@ -167,7 +167,7 @@ function getJavaDoc(name){
 }
 
 function writeClass() {
-	var headerFile = baseDir.resolve("src/main/js/AutoItX3.idl");	
+	var headerFile = baseDir.resolve("src/main/javascript/AutoItX3.idl");	
 	var text = Java.from(Files.readAllLines(headerFile, StandardCharsets.UTF_8)).
 	map(function(it) it.trim().
 			replace("[in] ", "").

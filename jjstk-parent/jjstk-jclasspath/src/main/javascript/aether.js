@@ -23,7 +23,7 @@ var dependencyManager = (function(){
 /**
  * Resolves the given argument as a dependency in the local workspace.
  */
-function requireJar(dependency) {
+exports.requireJar = function(dependency) {
 	var files = dependencyManager.resolve([dependency]);
 	dependencyManager.load(files);
 }
