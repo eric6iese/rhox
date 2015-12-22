@@ -12,54 +12,54 @@ import jdk.nashorn.api.scripting.AbstractJSObject;
  */
 public class JsCom extends AbstractJSObject {
 
-    /**
-     * Baut die Verbindung zum Com-Knoten auf.
-     */
-    public static JsCom connect(String name) {
-        return new JsCom(ComNode.connect(name));
-    }
+	/**
+	 * Baut die Verbindung zum Com-Knoten auf.
+	 */
+	public static JsCom connect(String name) {
+		return new JsCom(ComNode.connect(name));
+	}
 
-    private final ComNode node;
+	private final ComNode node;
 
-    private JsCom(ComNode node) {
-        this.node = node;
-    }
+	private JsCom(ComNode node) {
+		this.node = node;
+	}
 
-    @Override
-    public JsCom call(Object thiz, Object... args) {
-        return new JsCom(node.invoke(args));
-    }
+	@Override
+	public JsCom call(Object thiz, Object... args) {
+		return new JsCom(node.invoke(args));
+	}
 
-    @Override
-    public JsCom getMember(String name) {
-        return new JsCom(node.get(name));
-    }
+	@Override
+	public JsCom getMember(String name) {
+		return new JsCom(node.get(name));
+	}
 
-    @Override
-    public void setMember(String name, Object value) {
-        node.set(name, value);
-    }
+	@Override
+	public void setMember(String name, Object value) {
+		node.set(name, value);
+	}
 
-    @Override
-    public Object getDefaultValue(Class<?> hint) {
-        Object o = node.value();
-        if (Number.class.isInstance(hint)) {
-            if (o instanceof Number) {
-                return (Number) o;
-            } else {
-                return null;
-            }
-        }
-        return o == null ? null : o.toString();
-    }
+	@Override
+	public Object getDefaultValue(Class<?> hint) {
+		Object o = node.value();
+		if (Number.class.isInstance(hint)) {
+			if (o instanceof Number) {
+				return (Number) o;
+			} else {
+				return null;
+			}
+		}
+		return o == null ? null : o.toString();
+	}
 
-    @Override
-    public String toString() {
-        return (String) getDefaultValue(String.class);
-    }
+	@Override
+	public String toString() {
+		return (String) getDefaultValue(String.class);
+	}
 
-    @Override
-    public double toNumber() {
-        return ((Number) getDefaultValue(Number.class)).doubleValue();
-    }
+	@Override
+	public double toNumber() {
+		return ((Number) getDefaultValue(Number.class)).doubleValue();
+	}
 }

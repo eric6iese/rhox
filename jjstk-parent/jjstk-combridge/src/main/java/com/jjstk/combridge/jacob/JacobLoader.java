@@ -35,7 +35,8 @@ public class JacobLoader {
 		}
 
 		Path jacobDll = unpackFile(tmpdir, JacobLoader.class, "jacob-1.18-x86.dll", "jacob-1.18-x64.dll");
-		// Cant load autoit externally YET. currently it still has to be installed
+		// Cant load autoit externally YET. currently it still has to be
+		// installed
 		// Path autoitDll = unpackFile(tmpdir, AutoItApiWriter.class,
 		// "AutoItX3.dll", "AutoItX3_x64.dll");
 		// System.load(autoitDll.toString());
