@@ -17,7 +17,7 @@
 	</dependencySets>
 	<fileSets>
 		<fileSet>
-			<directory>src/main/js</directory>
+			<directory>src/main/javascript</directory>
 			<outputDirectory>/</outputDirectory>
 		</fileSet>
 	</fileSets>
