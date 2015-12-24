@@ -32,7 +32,7 @@ var requireAll = function (files) {
 /**
  * Resolves the given argument as a jarfile to load in the local workspace.
  */
-exports.require = function (file) {
+exports.requirePath = function (file) {
     requireAll([new File(file)]);
 };
 

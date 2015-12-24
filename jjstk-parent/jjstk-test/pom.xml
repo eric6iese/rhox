@@ -9,8 +9,8 @@
     <artifactId>jjstk-test</artifactId>
     <dependencies>
         <dependency>
-            <groupId>de.evermind</groupId>
-            <artifactId>jautoit-api</artifactId>
+            <groupId>com.jjstk</groupId>
+            <artifactId>jjstk-combridge</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

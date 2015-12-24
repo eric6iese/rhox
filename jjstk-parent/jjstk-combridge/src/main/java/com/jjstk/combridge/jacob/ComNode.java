@@ -5,121 +5,109 @@
  */
 package com.jjstk.combridge.jacob;
 
-import com.jacob.com.Dispatch;
-import com.jacob.com.JacobException;
-import com.jacob.com.Variant;
+import com.sun.jna.platform.win32.Variant.VARIANT;
+import com.sun.jna.platform.win32.COM.COMException;
 
 /**
  * Ein Knoten in einer Com-Hierarchie von Werten.
  */
 public class ComNode {
 
-	static {
-		JacobLoader.initialize();
-	}
+    /**
+     * Baut die Verbindung zum angegebenen Com-Object auf.
+     */
+    public static ComNode connect(String name) {
+        return new ComNode(name, new Dispatcher(name), null);
+    }
 
-	/**
-	 * Baut die Verbindung zum angegebenen Com-Object auf.
-	 */
-	public static ComNode connect(String name) {
-		return new ComNode(name, new Dispatch(name), null);
-	}
+    private final String desc;
+    private Object dispatch;
+    private final String member;
 
-	private final String desc;
-	private Object dispatch;
-	private final String member;
+    private ComNode(String desc, Object dispatch, String member) {
+        this.desc = desc;
+        this.dispatch = dispatch;
+        this.member = member;
+    }
 
-	private ComNode(String desc, Object dispatch, String member) {
-		this.desc = desc;
-		this.dispatch = dispatch;
-		this.member = member;
-	}
+    private Dispatcher dispatch() {
+        if (dispatch instanceof VARIANT) {
+            dispatch = new Dispatcher((VARIANT) dispatch);
+        }
+        return (Dispatcher) dispatch;
+    }
 
-	private Variant var(Object in) {
-		if (in instanceof CharSequence) {
-			in = in.toString();
-		}
-		return new Variant(in);
-	}
+    private VARIANT get() {
+        try {
+            return dispatch().get(member);
+        } catch (COMException e) {
+            throw newException(e);
+        }
+    }
 
-	private Dispatch dispatch() {
-		if (dispatch instanceof Variant) {
-			dispatch = ((Variant) dispatch).toDispatch();
-		}
-		return (Dispatch) dispatch;
-	}
+    private Dispatcher getDispatchMember() {
+        if (member == null) {
+            return dispatch();
+        }
+        VARIANT v = get();
+        return new Dispatcher(v);
+    }
 
-	private Variant get() {
-		try {
-			return Dispatch.get(dispatch(), member);
-		} catch (JacobException e) {
-			throw new UnsupportedOperationException(desc + " failed!", e);
-		}
-	}
+    /**
+     * Interpretiert den aktuellen als Knoten und ruft ihn mit den Parametern
+     * auf.
+     */
+    public ComNode invoke(Object... args) {
+        Dispatcher d = dispatch();
+        VARIANT v;
+        try {
+            v = d.invoke(member, args);
+        } catch (COMException e) {
+            throw newException(e);
+        }
+        return new ComNode(desc + "()", v, null);
+    }
 
-	private Dispatch getDispatchMember() {
-		if (member == null) {
-			return dispatch();
-		}
-		Variant v = get();
-		return v.toDispatch();
-	}
+    /**
+     * Löst ein Sub-Member des aktuellen Knotens auf.
+     */
+    public ComNode get(String name) {
+        Dispatcher d = getDispatchMember();
+        return new ComNode(desc + "." + name, d, name);
+    }
 
-	/**
-	 * Interpretiert den aktuellen als Knoten und ruft ihn mit den Parametern
-	 * auf.
-	 */
-	public ComNode invoke(Object... args) {
-		Variant[] vars = new Variant[args.length];
-		for (int i = 0; i < vars.length; i++) {
-			vars[i] = var(args[i]);
-		}
-		Variant v;
-		try {
-			v = Dispatch.callN(dispatch(), member, (Object[]) vars);
-		} catch (JacobException e) {
-			throw new UnsupportedOperationException(desc + " failed!", e);
-		}
-		return new ComNode(desc + "()", v, null);
-	}
+    /**
+     * Setzt den Wert des Members neu.
+     */
+    public void set(String name, Object value) {
+        Dispatcher d = getDispatchMember();
+        try {
+            d.set(name, value);
+        } catch (COMException e) {
+            throw newException(e);
+        }
+    }
 
-	/**
-	 * Löst ein Sub-Member des aktuellen Knotens auf.
-	 */
-	public ComNode get(String name) {
-		Dispatch d = getDispatchMember();
-		return new ComNode(desc + "." + name, d, name);
-	}
+    /**
+     * Liefert den Java-Wert des Com-Noten zurück.
+     */
+    public Object value() {
+        if (dispatch instanceof VARIANT) {
+            return ((VARIANT) dispatch).getValue();
+        } else if (member == null) {
+            return dispatch.toString();
+        }
+        VARIANT v = get();
+        return v.getValue();
+    }
 
-	/**
-	 * Setzt den Wert des Members neu.
-	 */
-	public void set(String name, Object value) {
-		Dispatch d = getDispatchMember();
-		Variant v = var(value);
-		try {
-			Dispatch.put(d, name, v);
-		} catch (JacobException e) {
-			throw new UnsupportedOperationException(desc + " failed!", e);
-		}
-	}
+    @Override
+    public String toString() {
+        return "ComNode(" + desc + ")";
+    }
 
-	/**
-	 * Liefert den Java-Wert des Com-Noten zurück.
-	 */
-	public Object value() {
-		Object o;
-		if (dispatch instanceof Variant) {
-			return ((Variant) dispatch).toJavaObject();
-		} else if (member == null) {
-			return dispatch.toString();
-		}
-		Variant v = get();
-		return v.toJavaObject();
-	}
-
-	@Override
-	public String toString() {
-		return "ComNode(" + desc + ")";
-	}
+    private RuntimeException newException(COMException e) {
+        String data = e.getExcepInfo().toString();
+        return new UnsupportedOperationException(desc + " failed! data = " + data, e);
+    }
 }

@@ -10,6 +10,7 @@ import jdk.nashorn.api.scripting.AbstractJSObject;
 /**
  * Javascript-Variante des Com-Knotens.
  */
+@SuppressWarnings("restriction")
 public class JsCom extends AbstractJSObject {
 
 	/**

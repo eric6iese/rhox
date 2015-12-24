@@ -17,6 +17,6 @@ public class TestJs {
     public static void main(String[] args) throws Exception {
         NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
         ScriptEngine engine = factory.getScriptEngine();
-        engine.eval("load('src/main/js/word.js');");
+        engine.eval("load('src/main/javascript/word.js');");
     }
 }
