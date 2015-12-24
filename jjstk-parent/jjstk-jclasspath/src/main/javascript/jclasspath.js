@@ -1,4 +1,5 @@
 // Imports
+var Class = java.lang.Class;
 var File = java.io.File;
 var Paths = java.nio.file.Paths;
 var Files = java.nio.file.Files;
@@ -6,8 +7,28 @@ var URLClassLoader = java.net.URLClassLoader;
 var URL = java.net.URL;
 var Thread = java.lang.Thread;
 
-var mAddUrl = null;
+/**
+ * A JavaModule is a separate unit which encapsulates the results of a given classloader or set of urls.
+ */
+var JavaModule = function (libUrls, parentClassLoader) {
+    if (parentClassLoader === undefined) {
+        this.classLoader = new URLClassLoader(libUrls);
+    } else {
+        this.classLoader = new URLClassLoader(libUrls, parentClassLoader);
+    }
+};
+/**
+ * Resolves the given class using the module's internal classloader.
+ * Works pretty much the same as the java.type function, but for the module loader instead.
+ */
+JavaModule.prototype.type = function (className) {
+    var clazz = Class.forName(className, true, this.classLoader);
+    return clazz.static;
+};
 
+exports.JavaModule = JavaModule;
+
+var mAddUrl = null;
 /**
  * Loads associated resolved Dependencies into the classpath.
  */
@@ -38,13 +59,18 @@ exports.requirePath = function (pattern) {
     var files = [];
     var dir = Paths.get(__dirname);
     pattern = "glob:" + pattern;
-    var dirstream = Files.newDirectoryStream(dir, pattern);
+    var matcher = dir.getFileSystem().getPathMatcher(pattern);
+    var stream = Files.walk(dir);
     try {
-        dirstream.forEach(function (path) {
+        stream.forEach(function (path) {
+            var p = dir.relativize(path);
+            if (!matcher.matches(p)) {
+                return;
+            }
             files.push(path.toFile());
         });
     } finally {
-        dirstream.close();
+        stream.close();
     }
     requireAll(files);
 };
@@ -71,10 +97,9 @@ exports.requireArtifact = function (dependency) {
         });
 
         // Create the separate ClassLoader and finally load the class
-        var classLoader = new URLClassLoader(libUrls);
-        var clazz = classLoader.loadClass(className);
-
-        dependencyManager = clazz.newInstance();
+        var mavenModule = new JavaModule(libUrls);
+        var DependencyManager = mavenModule.type(className);
+        dependencyManager = new DependencyManager();
     }
     var files = dependencyManager.resolve([dependency]);
     requireAll(files);

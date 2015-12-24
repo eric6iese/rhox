@@ -30,6 +30,8 @@ Throwables = Java.type("com.google.common.base.Throwables");
 System.out.println("Throwables ist nach dem manuellen Laden von guava verfügbar!");
 Assert.assertTrue(true);
 
-jclasspath.requirePath("lib/slfj4*");
+jclasspath.requirePath("lib/slf4j*.jar");
 
 var log = org.slf4j.LoggerFactory.getLogger("hello");
+
+log.info("hello");
