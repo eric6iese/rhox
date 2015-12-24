@@ -1,4 +1,4 @@
-package com.jjstk.combridge.jacob;
+package com.jjstk.combridge;
 
 import com.sun.jna.platform.win32.COM.COMBindingBaseObject;
 import java.util.NoSuchElementException;

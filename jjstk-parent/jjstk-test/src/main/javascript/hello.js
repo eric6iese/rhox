@@ -1,4 +1,4 @@
-var JsCom = Java.type('de.evermind.scriptmaster.jacob.JsCom')
+var JsCom = Java.type('com.jjstk.combridge.JsCom')
 var System = Java.type('java.lang.System')
 var Runtime = Java.type('java.lang.Runtime')
 

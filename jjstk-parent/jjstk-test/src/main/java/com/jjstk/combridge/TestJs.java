@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package autoitx4java;
+package com.jjstk.combridge;
 
 import javax.script.ScriptEngine;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
