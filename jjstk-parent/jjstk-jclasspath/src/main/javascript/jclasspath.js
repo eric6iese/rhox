@@ -1,5 +1,7 @@
 // Imports
 var File = java.io.File;
+var Paths = java.nio.file.Paths;
+var Files = java.nio.file.Files;
 var URLClassLoader = java.net.URLClassLoader;
 var URL = java.net.URL;
 var Thread = java.lang.Thread;
@@ -32,8 +34,19 @@ var requireAll = function (files) {
 /**
  * Resolves the given argument as a jarfile to load in the local workspace.
  */
-exports.requirePath = function (file) {
-    requireAll([new File(file)]);
+exports.requirePath = function (pattern) {
+    var files = [];
+    var dir = Paths.get(__dirname);
+    pattern = "glob:" + pattern;
+    var dirstream = Files.newDirectoryStream(dir, pattern);
+    try {
+        dirstream.forEach(function (path) {
+            files.push(path.toFile());
+        });
+    } finally {
+        dirstream.close();
+    }
+    requireAll(files);
 };
 
 var dependencyManager = null;

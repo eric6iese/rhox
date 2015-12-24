@@ -28,5 +28,8 @@ try {
 jclasspath.requireArtifact('com.google.guava:guava:19.0');
 Throwables = Java.type("com.google.common.base.Throwables");
 System.out.println("Throwables ist nach dem manuellen Laden von guava verfügbar!");
+Assert.assertTrue(true);
 
-Assert.fail("Fails as expected!");
+jclasspath.requirePath("lib/slfj4*");
+
+var log = org.slf4j.LoggerFactory.getLogger("hello");
