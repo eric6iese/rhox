@@ -7,16 +7,22 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>jjstk-test</artifactId>
+    <description>Internal Project, provides the test-infrastructure with jasmine for the other jjstk-projects.
+        It uses a custom variant of the brilliant Jasmine-JUnit-Runner(https://github.com/hhelwich/junit-jasmine-runner)
+        to make all tests fully compatible with maven AND the IDE's.
+    </description>
     <dependencies>
-        <dependency>
-            <groupId>com.jjstk</groupId>
-            <artifactId>jjstk-combridge</artifactId>
-            <version>${project.version}</version>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.helwich.junit</groupId>
+            <artifactId>junit-jasmine-runner</artifactId>
         </dependency>
     </dependencies>
 </project>
