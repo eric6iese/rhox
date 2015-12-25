@@ -1,16 +1,22 @@
 load(java.lang.System.getProperty('user.home') + '/jjstk/bootstrap.js');
 
 var combridge = require('jjstk-combridge');
-   
+
 var System = Java.type('java.lang.System')
 var Runtime = Java.type('java.lang.Runtime')
 
+try {
+    Java.type('com.jjstk.combridge');
+} catch (e) {
+    e.printStackTrace();
+    System.err.println("OK, cannot load the combridge directly!");
+}
 
 var au = combridge.newComObject("AutoItX3.Control");
 
-function assertWinExists(value){
+function assertWinExists(value) {
     var result = au.winExists(notepad, testString);
-    if (result != value){
+    if (result != value) {
         throw new Error('Expected ' + value + ' but was ' + result + '!');
     }
 }

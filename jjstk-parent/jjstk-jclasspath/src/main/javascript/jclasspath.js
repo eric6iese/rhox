@@ -9,8 +9,12 @@ var Thread = java.lang.Thread;
 
 /**
  * A JavaModule is a separate unit which encapsulates the results of a given classloader or set of urls.
+ * @param files the classpath array consisting of folder and jar file (strings)
  */
-var JavaModule = function (libUrls, parentClassLoader) {
+var JavaModule = function (files, parentClassLoader) {
+    var libUrls = files.map(function (f) {
+        return new File(f).toURI().toURL();
+    });
     if (parentClassLoader === undefined) {
         this.classLoader = new URLClassLoader(libUrls);
     } else {
@@ -26,11 +30,10 @@ JavaModule.prototype.type = function (className) {
     return clazz.static;
 };
 
-exports.JavaModule = JavaModule;
-
 var mAddUrl = null;
 /**
  * Loads associated resolved Dependencies into the classpath.
+ * @param files an array of strings with the filenames
  */
 var requireAll = function (files) {
     if (mAddUrl === null) {
@@ -44,7 +47,7 @@ var requireAll = function (files) {
         urls[it.toString()] = true;
     });
     files.forEach(function (file) {
-        var url = file.toURI().toURL();
+        var url = new File(file).toURI().toURL();
         if (urls[url.toString()]) {
             return;
         }
@@ -52,10 +55,7 @@ var requireAll = function (files) {
     });
 };
 
-/**
- * Resolves the given argument as a jarfile to load in the local workspace.
- */
-exports.requirePath = function (dirname, pattern) {
+var resolvePath = function (dirname, pattern) {
     var files = [];
     var dir = Paths.get("" + dirname);
     pattern = "glob:" + pattern;
@@ -67,20 +67,16 @@ exports.requirePath = function (dirname, pattern) {
             if (!matcher.matches(p)) {
                 return;
             }
-            files.push(path.toFile());
+            files.push(path.toAbsolutePath().toString());
         });
     } finally {
         stream.close();
     }
-    requireAll(files);
+    return files;
 };
 
 var dependencyManager = null;
-
-/**
- * Resolves the given argument as a dependency in the local workspace.
- */
-exports.requireArtifact = function (dependency) {
+var resolveArtifact = function (dependency) {
     if (dependencyManager === null) {
         // Load all jars of the distribution in a separate classloader to avoid version collisions.
         var className = "com.jjstk.jclasspath.DependencyManager";
@@ -89,18 +85,44 @@ exports.requireArtifact = function (dependency) {
             throw new Error("Cannot find directory " + libDir + "!");
         }
 
-        var libJars = Java.from(libDir.listFiles()).filter(function (f) {
+        var libFiles = Java.from(libDir.listFiles()).filter(function (f) {
             return f.getName().endsWith(".jar") || f.isDirectory();
-        });
-        var libUrls = libJars.map(function (f) {
-            return f.toURI().toURL();
+        }).map(function (f) {
+            return f.getAbsolutePath();
         });
 
         // Create the separate ClassLoader and finally load the class
-        var mavenModule = new JavaModule(libUrls);
+        var mavenModule = new JavaModule(libFiles);
         var DependencyManager = mavenModule.type(className);
         dependencyManager = new DependencyManager();
     }
     var files = dependencyManager.resolve([dependency]);
+    return Java.from(files).map(function (f) {
+        return f.getAbsolutePath();
+    });
+};
+
+// Exports
+
+/**
+ * Resolves the given argument as a jarfile to load in the local workspace.
+ */
+var requirePath = function (dirname, pattern) {
+    var files = resolvePath(dirname, pattern);
     requireAll(files);
 };
+requirePath.resolve = resolvePath;
+
+/**
+ * Resolves the given argument as a dependency in the local workspace.
+ */
+var requireArtifact = function (dependency) {
+    var files = resolveArtifact(dependency);
+    requireAll(files);
+};
+requireArtifact.resolve = resolveArtifact;
+
+
+exports.JavaModule = JavaModule;
+exports.requirePath = requirePath;
+exports.requireArtifact = requireArtifact;

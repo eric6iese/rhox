@@ -35,6 +35,13 @@ System.out.println(jclassPathDir);
 
 jclasspath.requirePath(jclassPathDir, "lib/slf4j*.jar");
 
+var files = jclasspath.requirePath.resolve(jclassPathDir, "lib/slf4j*.jar");
+System.out.println("Dependencies:");
+files.forEach(function (f) {
+    System.out.println(f);
+});
+
+
 var log = org.slf4j.LoggerFactory.getLogger("hello");
 
 log.info("hello");
