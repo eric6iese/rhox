@@ -55,9 +55,9 @@ var requireAll = function (files) {
 /**
  * Resolves the given argument as a jarfile to load in the local workspace.
  */
-exports.requirePath = function (pattern) {
+exports.requirePath = function (dirname, pattern) {
     var files = [];
-    var dir = Paths.get(__dirname);
+    var dir = Paths.get("" + dirname);
     pattern = "glob:" + pattern;
     var matcher = dir.getFileSystem().getPathMatcher(pattern);
     var stream = Files.walk(dir);

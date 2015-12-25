@@ -1,9 +1,9 @@
-var jclasspath = require('jclasspath');
+var jclasspath = require('jjstk-jclasspath');
 
-jclasspath.requirePath('lib/*.jar');
+jclasspath.requirePath(__dirname, 'lib/*.jar');
 
 var JsCom = Java.type('com.jjstk.combridge.JsCom');
 
-exports.create = function (name) {
+exports.newComObject = function (name) {
     return JsCom.connect(name);
 };

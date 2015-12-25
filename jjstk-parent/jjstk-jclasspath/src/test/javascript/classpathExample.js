@@ -4,7 +4,7 @@ var System = java.lang.System;
 System.out.println(System.getProperty("user.dir"));
 
 try {
-    var jclasspath = require("../../../target/jjstk-jclasspath/jclasspath.js");
+    var jclasspath = require("jjstk-jclasspath");
 } catch (e) {
     e.cause.printStackTrace();
 }
@@ -30,7 +30,10 @@ Throwables = Java.type("com.google.common.base.Throwables");
 System.out.println("Throwables ist nach dem manuellen Laden von guava verfügbar!");
 Assert.assertTrue(true);
 
-jclasspath.requirePath("lib/slf4j*.jar");
+var jclassPathDir = java.nio.file.Paths.get(require.resolve('jjstk-jclasspath')).getParent();
+System.out.println(jclassPathDir);
+
+jclasspath.requirePath(jclassPathDir, "lib/slf4j*.jar");
 
 var log = org.slf4j.LoggerFactory.getLogger("hello");
 

@@ -1,13 +1,16 @@
-var JsCom = Java.type('com.jjstk.combridge.JsCom')
+load(java.lang.System.getProperty('user.home') + '/jjstk/bootstrap.js');
+
+var combridge = require('jjstk-combridge');
+   
 var System = Java.type('java.lang.System')
 var Runtime = Java.type('java.lang.Runtime')
 
 
-var au = JsCom.connect("AutoItX3.Control");
+var au = combridge.newComObject("AutoItX3.Control");
 
 function assertWinExists(value){
     var result = au.winExists(notepad, testString);
-    if (result !== value){
+    if (result != value){
         throw new Error('Expected ' + value + ' but was ' + result + '!');
     }
 }

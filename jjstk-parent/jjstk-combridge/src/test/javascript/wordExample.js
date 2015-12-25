@@ -1,4 +1,12 @@
-var JsCom = Java.type('com.jjstk.combridge.JsCom')
+load(java.lang.System.getProperty('user.home') + '/jjstk/bootstrap.js');
+
+
+try {
+    var combridge = require('jjstk-combridge');
+} catch (e) {
+    e.cause.printStackTrace();
+}
+
 var System = Java.type('java.lang.System')
 var Runtime = Java.type('java.lang.Runtime')
 
@@ -14,9 +22,9 @@ var saveOnExit = false;
 var win = "file_in.docx - Word";
 
 // Code
-var au = JsCom.connect('AutoItX3.Control');
+var au = combridge.newComObject('AutoItX3.Control');
 
-var word = JsCom.connect('Word.Application');
+var word = combridge.newComObject('Word.Application');
 try {
     word.Visible = true;
     var documents = word.Documents;
