@@ -7,11 +7,18 @@ package com.jjstk.test;
 
 import de.helwich.junit.JasmineDescriber;
 import de.helwich.junit.JasmineReporter;
-import de.helwich.junit.JasmineTest;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
@@ -20,7 +27,8 @@ import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
 
 /**
- * This class is a full copy of the JasmineTestRunner from<br/>
+ * This class is a editied and modified copy of the JjstkJasmineTestRunner
+ * from<br/>
  * https://github.com/hhelwich/junit-jasmine-runner/blob/master/src/main/java/de/helwich/junit/JasmineTestRunner.java
  * <br/>
  * I had to do this because I needed a functionality to always load my custom
@@ -30,7 +38,18 @@ import org.junit.runner.notification.RunNotifier;
  */
 public class JjstkJasmineTestRunner extends Runner {
 
-    private final JasmineTest info;
+    /**
+     * All jjstk-tests will use the javascript-folder as the default test-folder
+     * (instead of js).
+     */
+    static final String TEST_DIR = "src/test/javascript";
+
+    /**
+     * All jjstk-tests are expected to end with this suffix (before .js). This
+     * prevents manual naming of them.
+     */
+    static final Set<String> SUFFIXES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("Test.js", "Spec.js")));
+
     private final Class<?> testClass;
     private final ScriptEngine nashorn;
     private final JasmineReporter reporter;
@@ -39,11 +58,6 @@ public class JjstkJasmineTestRunner extends Runner {
     public JjstkJasmineTestRunner(Class<?> testClass) {
         try {
             this.testClass = testClass;
-            info = testClass.getAnnotation(JasmineTest.class);
-            if (info == null) {
-                throw new RuntimeException("annotation " + JasmineTest.class.getName() + " is missing on class "
-                        + testClass.getName());
-            }
 
             ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
             nashorn = scriptEngineManager.getEngineByName("nashorn");
@@ -51,38 +65,30 @@ public class JjstkJasmineTestRunner extends Runner {
                 throw new RuntimeException("please use java 8");
             }
 
-            if (info.browser()) {
-                evalResource(nashorn, "/envjs/env.js");
-            } else {
-                evalResource(nashorn, "/de/helwich/junit/timer.js");
-            }
+            evalResource("/de/helwich/junit/timer.js");
 
-            evalResource(nashorn, "/jasmine/jasmine.js");
-            evalResource(nashorn, "/jasmine/boot.js");
+            evalResource("/jasmine/jasmine.js");
+            evalResource("/jasmine/boot.js");
 
             JasmineDescriber describer = (JasmineDescriber) nashorn.eval("jasmine.junitDescriber = new (Java.type(\""
                     + JasmineDescriber.class.getName() + "\")); ");
             describer.setRootName(testClass.getName());
 
-            evalResource(nashorn, "/de/helwich/junit/describer.js");
+            evalResource("/de/helwich/junit/describer.js");
 
-            // CUSTOM CHANGE bootloaderscript:
-            evalResource(nashorn, "/com/jjstk/test/jvm-npm.js");
-            // END OF CUSTOM CHANGE
+            Path dir = projectDir();
+            Path bootstrapJs = projectDir().resolve("../globals/bootstrap.js");
 
-            for (String src : info.src()) {
-                evalFile(nashorn, info.srcDir() + "/" + src + info.fileSuffix());
-            }
-            for (String test : info.test()) {
-                evalFile(nashorn, info.testDir() + "/" + test + info.fileSuffix());
-            }
+            evalPath(bootstrapJs);
+
+            evalTests();
 
             description = describer.getDescription();
             describer.disable();
             reporter = (JasmineReporter) nashorn.eval("jasmine.junitReporter = new (Java.type(\""
                     + JasmineReporter.class.getName() + "\")); ");
             reporter.setDescription(description);
-            evalResource(nashorn, "/de/helwich/junit/reporter.js");
+            evalResource("/de/helwich/junit/reporter.js");
         } catch (ScriptException e) {
             throw new RuntimeException(e);
         }
@@ -93,31 +99,56 @@ public class JjstkJasmineTestRunner extends Runner {
         return description;
     }
 
-    private File projectDir() {
+    private Path projectDir() {
         String relPath = testClass.getProtectionDomain().getCodeSource().getLocation().getFile();
         File targetDir = new File(relPath + "../../");
-        return targetDir;
+        return targetDir.getAbsoluteFile().toPath();
     }
 
-    private final Object evalResource(ScriptEngine nashorn, String name) {
+    private void evalResource(String name) {
         URL url = testClass.getResource(name);
-        String src = url.toExternalForm();
+        load(url);
+    }
+
+    private void evalPath(Path file) {
+        URL url;
         try {
-            return nashorn.eval("load('" + src + "')");
+            file = file.toAbsolutePath().toRealPath();
+            url = file.toUri().toURL();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        load(url);
+    }
+
+    private void load(URL resource) {
+        String src = resource.toExternalForm();
+        try {
+            nashorn.eval("load('" + src + "')");
         } catch (ScriptException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private final Object evalFile(ScriptEngine nashorn, String name) {
-        File file = new File(projectDir(), name);
-        try {
-            return nashorn.eval(new FileReader(file));
-        } catch (ScriptException e) {
-            throw new RuntimeException(e);
-        } catch (FileNotFoundException e) {
+    private void evalTests() {
+        Path dir = projectDir().resolve(TEST_DIR);
+        List<Path> scripts;
+        try (Stream<Path> stream = Files.walk(dir)) {
+            scripts = stream.filter(f -> {
+                if (Files.isRegularFile(f)) {
+                    String name = f.getFileName().toString();
+                    for (String suffix : SUFFIXES) {
+                        if (name.endsWith(suffix)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }).collect(Collectors.toList());
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        scripts.forEach(this::evalPath);
     }
 
     @Override
@@ -132,10 +163,6 @@ public class JjstkJasmineTestRunner extends Runner {
     public void runThrows(RunNotifier notifier) throws ScriptException {
         reporter.setNotifier(notifier);
         nashorn.eval("jasmine.getEnv().execute();");
-        if (info.browser()) {
-            nashorn.eval("Envjs.wait()");
-        } else {
-            nashorn.eval("setTimeout.wait()");
-        }
+        nashorn.eval("setTimeout.wait()");
     }
 }
