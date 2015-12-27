@@ -17,7 +17,7 @@
     </dependencySets>
     <fileSets>
         <fileSet>
-            <directory>src/main/javascript</directory>
+            <directory>node_modules/${project.artifactId}</directory>
             <outputDirectory>/</outputDirectory>
         </fileSet>
     </fileSets>

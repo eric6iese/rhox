@@ -62,6 +62,20 @@
     </dependencyManagement>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/javascript</directory>
+                <targetPath>${basedir}/node_modules/${project.artifactId}</targetPath>
+            </resource>
+            <resource>
+                <directory></directory>
+                <includes>
+                    <include>package.json</include>
+                </includes>
+                <filtering>true</filtering>
+                <targetPath>${basedir}/node_modules/${project.artifactId}</targetPath>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>

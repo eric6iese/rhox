@@ -63,11 +63,12 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>
-                        <descriptor>src/assembly/dir.xml</descriptor>
+                        <descriptor>../src/assembly/node_module.xml</descriptor>
                     </descriptors>
                     <appendAssemblyId>false</appendAssemblyId>
                     <attach>false</attach>
                     <finalName>${project.artifactId}</finalName>
+                    <outputDirectory>../node_modules</outputDirectory>
                 </configuration>
                 <executions>
                     <execution>
@@ -75,27 +76,6 @@
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <configuration>
-                            <target>
-                                <property name="module.dir" value="../node_modules/${project.artifactId}"/>
-                                <delete dir="${module.dir}"/>
-                                <mkdir dir="${module.dir}"/> 
-                                <copy todir="${module.dir}">
-                                    <fileset dir="target/${project.artifactId}"/>
-                                </copy>
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
                         </goals>
                     </execution>
                 </executions>
