@@ -8,8 +8,7 @@
     </parent>
     <artifactId>jjstk-combridge</artifactId>
 
-    <dependencies>
-        
+    <dependencies>        
         <dependency>
             <groupId>com.jjstk</groupId>
             <artifactId>jjstk-jclasspath</artifactId>
@@ -21,7 +20,6 @@
             <version>4.2.1</version>
             <scope>provided</scope>
         </dependency>
-        
         <dependency>
             <groupId>com.jjstk</groupId>
             <artifactId>jjstk-test</artifactId>

@@ -30,15 +30,24 @@ JavaModule.prototype.type = function (className) {
     return clazz.static;
 };
 
-var mAddUrl = null;
+/**
+ * The dependency cache tracks all known dependency ids to prevent duplicate classloading
+ * In the same way, the classloaders each check individually which urls have already been loaded, to
+ * prevent them from being loaded again later on.
+ */
+var dependencyCache = {};
+
+/** Reflect-Hook for the add-url method. */
+var methodAddUrl = null;
+
 /**
  * Loads associated resolved Dependencies into the classpath.
  * @param files an array of strings with the filenames
  */
 var requireAll = function (files) {
-    if (mAddUrl === null) {
-        mAddUrl = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-        mAddUrl.setAccessible(true);
+    if (methodAddUrl === null) {
+        methodAddUrl = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+        methodAddUrl.setAccessible(true);
     }
     var classLoader = Thread.currentThread().getContextClassLoader();
 
@@ -46,12 +55,31 @@ var requireAll = function (files) {
     Java.from(classLoader.getURLs()).forEach(function (it) {
         urls[it.toString()] = true;
     });
-    files.forEach(function (file) {
+    files.map(function (file) {
+        // Check maven dependency cache if input is an artifact
+        var id = file.artifact;
+        if (id === undefined) {
+            // not a maven dependency, go on
+            return file;
+        }
+        if (dependencyCache[id]) {
+            // skip: Dependency has already been loaded
+            return null;
+        }
+        // add depency to cache and continue with the file part only
+        dependencyCache[id] = true;
+        return file.file;
+    }).forEach(function (file) {
+        if (file === null) {
+            return;
+        }
+        // Check file url
         var url = new File(file).toURI().toURL();
         if (urls[url.toString()]) {
             return;
         }
-        mAddUrl.invoke(classLoader, url);
+        // load the directory / jar
+        methodAddUrl.invoke(classLoader, url);
     });
 };
 
@@ -96,10 +124,12 @@ var resolveArtifact = function (dependency) {
         var DependencyManager = mavenModule.type(className);
         dependencyManager = new DependencyManager();
     }
-    var files = dependencyManager.resolve([dependency]);
-    return Java.from(files).map(function (f) {
-        return f.getAbsolutePath();
+    var artifacts = [];
+    var artifactMap = dependencyManager.resolve([dependency]);
+    artifactMap.forEach(function (id, file) {
+        artifacts.push({artifact: id, file: file});
     });
+    return artifacts;
 };
 
 // Exports
@@ -117,11 +147,9 @@ requirePath.resolve = resolvePath;
  * Resolves the given argument as a dependency in the local workspace.
  */
 var requireArtifact = function (dependency) {
-    var files = resolveArtifact(dependency);
-    requireAll(files);
+    var artifacts = resolveArtifact(dependency);
+    requireAll(artifacts);
 };
-requireArtifact.resolve = resolveArtifact;
-
 
 exports.JavaModule = JavaModule;
 exports.requirePath = requirePath;

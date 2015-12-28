@@ -11,6 +11,9 @@ try {
 
 jclasspath.requireArtifact('junit:junit:4.11');
 
+// does not load again!
+jclasspath.requireArtifact('junit:junit:4.11');
+
 var Assert = Java.type("org.junit.Assert");
 
 Assert.assertTrue(true);
