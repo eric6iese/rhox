@@ -12,8 +12,8 @@ var Runtime = Java.type('java.lang.Runtime')
 
 
 var dir = System.getProperty("user.home");
-var inputDoc = dir + "/file_in.docx";
-var outputDoc = dir + "/file_out.docx";
+var inputDoc = dir + "\\file_in.docx";
+var outputDoc = dir + "\\file_out.docx";
 var oldText = "[label:import:1]";
 var newText = "I am some horribly long sentence, so long that [insert bullshit here]";
 var visible = true;

@@ -9,7 +9,7 @@ var au = combridge.newComObject("AutoItX3.Control");
 
 function assertWinExists(value) {
     var result = au.winExists(notepad, testString);
-    if (result != value) {
+    if (result !== value) {
         throw new Error('Expected ' + value + ' but was ' + result + '!');
     }
 }
@@ -31,7 +31,7 @@ au.Send("{ALT}n", 1);
 
 assertWinExists(0);
 
-var err = "" + au.error;
+var err = au.error;
 System.out.println(err);
 
 var swShow = au.SW_SHOW

@@ -28,12 +28,12 @@ public class JsCom extends AbstractJSObject {
 
     @Override
     public Object call(Object thiz, Object... args) {
-        return new JsCom(node.invoke(args));
+        return toJs(node.invoke(args));
     }
 
     @Override
     public Object getMember(String name) {
-        return new JsCom(node.get(name));
+        return toJs(node.get(name));
     }
 
     @Override
@@ -41,26 +41,10 @@ public class JsCom extends AbstractJSObject {
         node.set(name, value);
     }
 
-    @Override
-    public Object getDefaultValue(Class<?> hint) {
-        Object o = node.value();
-        if (Number.class.isInstance(hint)) {
-            if (o instanceof Number) {
-                return (Number) o;
-            } else {
-                return null;
-            }
+    private Object toJs(Object o) {
+        if (o instanceof ComNode) {
+            return new JsCom((ComNode) o);
         }
-        return o == null ? null : o.toString();
-    }
-
-    @Override
-    public String toString() {
-        return (String) getDefaultValue(String.class);
-    }
-
-    @Override
-    public double toNumber() {
-        return ((Number) getDefaultValue(Number.class)).doubleValue();
+        return o;
     }
 }

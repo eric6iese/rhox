@@ -7,6 +7,10 @@ package com.jjstk.combridge;
 
 import com.sun.jna.platform.win32.Variant.VARIANT;
 import com.sun.jna.platform.win32.COM.COMException;
+import com.sun.jna.platform.win32.COM.IDispatch;
+import com.sun.jna.platform.win32.OaIdl;
+import com.sun.jna.platform.win32.OaIdl.DISPID;
+import com.sun.jna.platform.win32.Variant;
 
 /**
  * Ein Knoten in einer Com-Hierarchie von Werten.
@@ -14,91 +18,82 @@ import com.sun.jna.platform.win32.COM.COMException;
 public class ComNode {
 
     /**
-     * Baut die Verbindung zum angegebenen Com-Object auf.
+     * Creates a new ComObject with the given name (or connects to it).
      */
     public static ComNode connect(String name) {
         return new ComNode(name, new Dispatcher(name), null);
     }
 
     private final String desc;
-    private Object dispatch;
-    private final String member;
+    private final Dispatcher dispatcher;
+    private final DISPID dispId;
 
-    private ComNode(String desc, Object dispatch, String member) {
+    private ComNode(String desc, Dispatcher dispatcher, DISPID dispId) {
         this.desc = desc;
-        this.dispatch = dispatch;
-        this.member = member;
-    }
-
-    private Dispatcher dispatch() {
-        if (dispatch instanceof VARIANT) {
-            dispatch = new Dispatcher((VARIANT) dispatch);
-        }
-        return (Dispatcher) dispatch;
-    }
-
-    private VARIANT get() {
-        try {
-            return dispatch().get(member);
-        } catch (COMException e) {
-            throw newException(e);
-        }
-    }
-
-    private Dispatcher getDispatchMember() {
-        if (member == null) {
-            return dispatch();
-        }
-        VARIANT v = get();
-        return new Dispatcher(v);
+        this.dispatcher = dispatcher;
+        this.dispId = dispId;
     }
 
     /**
      * Interpretiert den aktuellen als Knoten und ruft ihn mit den Parametern
      * auf.
      */
-    public ComNode invoke(Object... args) {
-        Dispatcher d = dispatch();
+    public Object invoke(Object... args) {
         VARIANT v;
         try {
-            v = d.invoke(member, args);
+            v = dispatcher.invoke(dispId, args);
         } catch (COMException e) {
             throw newException(e);
         }
-        return new ComNode(desc + "()", v, null);
+        return toResult(desc + "()", v);
     }
 
     /**
-     * Löst ein Sub-Member des aktuellen Knotens auf.
+     * Löst ein Sub-Member des aktuellen Knotens auf.<br/>
+     * First, check if an element with this id exists. If it does not, throw an
+     * exception. if it does, then read it. if this fails, then instead of
+     * throwing an exception a new special sub-com-node is returned. this
+     * comnode can be used to invoke a method all on the element later on.
      */
-    public ComNode get(String name) {
-        Dispatcher d = getDispatchMember();
-        return new ComNode(desc + "." + name, d, name);
+    public Object get(String name) {
+        DISPID id;
+        try {
+            id = dispatcher.getId(name);
+        } catch (COMException e) {
+            throw newException(e);
+        }
+        VARIANT v;
+        try {
+            v = dispatcher.get(id);
+        } catch (COMException e) {
+            return new ComNode(desc + "." + name, dispatcher, id);
+        }
+        int type = v.getVarType().intValue();
+        if (type == Variant.VT_EMPTY) {
+            return new ComNode(desc + "." + name, dispatcher, id);
+        }
+        return toResult(name, v);
+    }
+
+    private Object toResult(String name, VARIANT v) {
+        Object o = v.getValue();
+        if (o instanceof IDispatch) {
+            Dispatcher d = new Dispatcher((IDispatch) o);
+            return new ComNode(name == null ? desc : desc + '.' + name, d, null);
+        }
+        return o;
     }
 
     /**
      * Setzt den Wert des Members neu.
      */
     public void set(String name, Object value) {
-        Dispatcher d = getDispatchMember();
         try {
-            d.set(name, value);
+            DISPID id = dispatcher.getId(name);
+            dispatcher.set(name, value);
         } catch (COMException e) {
             throw newException(e);
         }
-    }
-
-    /**
-     * Liefert den Java-Wert des Com-Noten zurück.
-     */
-    public Object value() {
-        if (dispatch instanceof VARIANT) {
-            return ((VARIANT) dispatch).getValue();
-        } else if (member == null) {
-            return dispatch.toString();
-        }
-        VARIANT v = get();
-        return v.getValue();
     }
 
     @Override
@@ -107,7 +102,17 @@ public class ComNode {
     }
 
     private RuntimeException newException(COMException e) {
-        String data = e.getExcepInfo().toString();
-        return new UnsupportedOperationException(desc + " failed! data = " + data, e);
+        long error = getErrorCode(e);
+        OaIdl.EXCEPINFO info = e.getExcepInfo();
+        String source = info.bstrSource.getValue();
+        String description = info.bstrDescription.getValue();
+        return new UnsupportedOperationException(
+                String.format("%s failed! ErrorCode: %s, Source: %s, Message: %s", desc, error, source, description));
+    }
+
+    long getErrorCode(COMException e) {
+        OaIdl.EXCEPINFO info = e.getExcepInfo();
+        long error = info.wCode.longValue();
+        return error != 0L ? error : info.scode.longValue();
     }
 }
