@@ -1,9 +1,9 @@
 package com.jjstk.jclasspath;
 
-import java.io.PrintStream;
-
 import org.eclipse.aether.AbstractRepositoryListener;
 import org.eclipse.aether.RepositoryEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simplistic repository listener that logs events to the console. <br/>
@@ -12,83 +12,90 @@ import org.eclipse.aether.RepositoryEvent;
  */
 final class ConsoleRepositoryListener extends AbstractRepositoryListener {
 
-	private PrintStream out;
+    private final Logger LOG = LoggerFactory.getLogger(ConsoleRepositoryListener.class);
 
-	public ConsoleRepositoryListener() {
-		this(null);
-	}
+    @Override
+    public void artifactDeployed(RepositoryEvent event) {
+        LOG.info("Deployed {} to {}" + event.getArtifact(), event.getRepository());
+    }
 
-	public ConsoleRepositoryListener(PrintStream out) {
-		this.out = (out != null) ? out : System.out;
-	}
+    @Override
+    public void artifactDeploying(RepositoryEvent event) {
+        LOG.info("Deploying {} to {}", event.getArtifact(), event.getRepository());
+    }
 
-	public void artifactDeployed(RepositoryEvent event) {
-		out.println("Deployed " + event.getArtifact() + " to " + event.getRepository());
-	}
+    @Override
+    public void artifactDescriptorInvalid(RepositoryEvent event) {
+        LOG.error("Invalid artifact descriptor for " + event.getArtifact(), event.getException());
+    }
 
-	public void artifactDeploying(RepositoryEvent event) {
-		out.println("Deploying " + event.getArtifact() + " to " + event.getRepository());
-	}
+    @Override
+    public void artifactDescriptorMissing(RepositoryEvent event) {
+        LOG.warn("Missing artifact descriptor for {}", event.getArtifact());
+    }
 
-	public void artifactDescriptorInvalid(RepositoryEvent event) {
-		out.println(
-				"Invalid artifact descriptor for " + event.getArtifact() + ": " + event.getException().getMessage());
-	}
+    @Override
+    public void artifactInstalled(RepositoryEvent event) {
+        LOG.info("Installed {} to {}", event.getArtifact(), event.getFile());
+    }
 
-	public void artifactDescriptorMissing(RepositoryEvent event) {
-		out.println("Missing artifact descriptor for " + event.getArtifact());
-	}
+    @Override
+    public void artifactInstalling(RepositoryEvent event) {
+        LOG.info("Installing {} to {}", event.getArtifact(), event.getFile());
+    }
 
-	public void artifactInstalled(RepositoryEvent event) {
-		out.println("Installed " + event.getArtifact() + " to " + event.getFile());
-	}
+    @Override
+    public void artifactResolved(RepositoryEvent event) {
+        LOG.debug("Resolved artifact {} from {}", event.getArtifact(), event.getRepository());
+    }
 
-	public void artifactInstalling(RepositoryEvent event) {
-		out.println("Installing " + event.getArtifact() + " to " + event.getFile());
-	}
+    @Override
+    public void artifactDownloading(RepositoryEvent event) {
+        LOG.info("Downloading artifact {} from {}", event.getArtifact(), event.getRepository());
+    }
 
-	public void artifactResolved(RepositoryEvent event) {
-		out.println("Resolved artifact " + event.getArtifact() + " from " + event.getRepository());
-	}
+    @Override
+    public void artifactDownloaded(RepositoryEvent event) {
+        LOG.info("Downloaded artifact {} from {}", event.getArtifact(), event.getRepository());
+    }
 
-	public void artifactDownloading(RepositoryEvent event) {
-		out.println("Downloading artifact " + event.getArtifact() + " from " + event.getRepository());
-	}
+    @Override
+    public void artifactResolving(RepositoryEvent event) {
+        LOG.debug("Resolving artifact {}", event.getArtifact());
+    }
 
-	public void artifactDownloaded(RepositoryEvent event) {
-		out.println("Downloaded artifact " + event.getArtifact() + " from " + event.getRepository());
-	}
+    @Override
+    public void metadataDeployed(RepositoryEvent event) {
+        LOG.info("Deployed {} to {}", event.getMetadata(), event.getRepository());
+    }
 
-	public void artifactResolving(RepositoryEvent event) {
-		out.println("Resolving artifact " + event.getArtifact());
-	}
+    @Override
+    public void metadataDeploying(RepositoryEvent event) {
+        LOG.info("Deploying {} to {}", event.getMetadata(), event.getRepository());
+    }
 
-	public void metadataDeployed(RepositoryEvent event) {
-		out.println("Deployed " + event.getMetadata() + " to " + event.getRepository());
-	}
+    @Override
+    public void metadataInstalled(RepositoryEvent event) {
+        LOG.info("Installed {} to {}", event.getMetadata(), event.getFile());
+    }
 
-	public void metadataDeploying(RepositoryEvent event) {
-		out.println("Deploying " + event.getMetadata() + " to " + event.getRepository());
-	}
+    @Override
+    public void metadataInstalling(RepositoryEvent event) {
+        LOG.debug("Installing {} to {}", event.getMetadata(), event.getFile());
+    }
 
-	public void metadataInstalled(RepositoryEvent event) {
-		out.println("Installed " + event.getMetadata() + " to " + event.getFile());
-	}
+    @Override
+    public void metadataInvalid(RepositoryEvent event) {
+        LOG.error("Invalid metadata {}", event.getMetadata());
+    }
 
-	public void metadataInstalling(RepositoryEvent event) {
-		out.println("Installing " + event.getMetadata() + " to " + event.getFile());
-	}
+    @Override
+    public void metadataResolved(RepositoryEvent event) {
+        LOG.debug("Resolved metadata {} from {}", event.getMetadata(), event.getRepository());
+    }
 
-	public void metadataInvalid(RepositoryEvent event) {
-		out.println("Invalid metadata " + event.getMetadata());
-	}
-
-	public void metadataResolved(RepositoryEvent event) {
-		out.println("Resolved metadata " + event.getMetadata() + " from " + event.getRepository());
-	}
-
-	public void metadataResolving(RepositoryEvent event) {
-		out.println("Resolving metadata " + event.getMetadata() + " from " + event.getRepository());
-	}
-
+    @Override
+    public void metadataResolving(RepositoryEvent event) {
+        LOG.debug("Resolving metadata {} from {}", event.getMetadata(), event.getRepository());
+    }
 }

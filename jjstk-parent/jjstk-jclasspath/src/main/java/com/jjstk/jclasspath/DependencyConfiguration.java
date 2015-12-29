@@ -14,27 +14,27 @@ import org.eclipse.aether.repository.RemoteRepository;
  */
 final class DependencyConfiguration {
 
-	private final File localRepository;
-	private final List<RemoteRepository> remoteRepositories;
+    private final File localRepository;
+    private final List<RemoteRepository> remoteRepositories;
 
-	public static DependencyConfiguration getMavenDefault() {
-		return new DependencyConfiguration(Paths.get(System.getProperty("user.home"), ".m2", "repository").toFile(),
-				Arrays.asList(new RemoteRepository.Builder("maven-central", "default", "http://repo1.maven.org/maven2/")
-						.build()));
+    public static DependencyConfiguration getMavenDefault() {
+        return new DependencyConfiguration(Paths.get(System.getProperty("user.home"), ".m2", "repository").toFile(),
+                Arrays.asList(new RemoteRepository.Builder("maven-central", "default", "http://repo1.maven.org/maven2/")
+                        .build()));
 
-	}
+    }
 
-	public DependencyConfiguration(File localRepository, List<RemoteRepository> remotes) {
-		this.localRepository = localRepository;
-		this.remoteRepositories = Collections.unmodifiableList(new ArrayList<>(remotes));
-	}
+    public DependencyConfiguration(File localRepository, List<RemoteRepository> remotes) {
+        this.localRepository = localRepository;
+        this.remoteRepositories = Collections.unmodifiableList(new ArrayList<>(remotes));
+    }
 
-	public File getLocalRepository() {
-		return localRepository;
-	}
+    public File getLocalRepository() {
+        return localRepository;
+    }
 
-	public List<RemoteRepository> getRemoteRepositories() {
-		return remoteRepositories;
-	}
+    public List<RemoteRepository> getRemoteRepositories() {
+        return remoteRepositories;
+    }
 
 }

@@ -33,67 +33,67 @@ import org.junit.Test;
  */
 public class CollectDependenciesExample {
 
-	@Test
-	public void collectDependencies() throws DependencyCollectionException {
-		// TODO you may need to change the following line:
-		File localRepo = new File(String.join(File.separator, System.getProperty("user.home"), ".m2", "repository"));
+    @Test
+    public void collectDependencies() throws DependencyCollectionException {
+        // TODO you may need to change the following line:
+        File localRepo = new File(String.join(File.separator, System.getProperty("user.home"), ".m2", "repository"));
 
-		RepositorySystem repositorySystem = newRepositorySystem();
-		DefaultRepositorySystemSession defaultRepositorySystemSession = MavenRepositorySystemUtils.newSession();
+        RepositorySystem repositorySystem = newRepositorySystem();
+        DefaultRepositorySystemSession defaultRepositorySystemSession = MavenRepositorySystemUtils.newSession();
 
-		final LocalRepository local = new LocalRepository(localRepo);
-		defaultRepositorySystemSession.setLocalRepositoryManager(
-				repositorySystem.newLocalRepositoryManager(defaultRepositorySystemSession, local));
+        final LocalRepository local = new LocalRepository(localRepo);
+        defaultRepositorySystemSession.setLocalRepositoryManager(
+                repositorySystem.newLocalRepositoryManager(defaultRepositorySystemSession, local));
 
-		List<RemoteRepository> remotes = Arrays.asList(
-				new RemoteRepository.Builder("maven-central", "default", "http://repo1.maven.org/maven2/").build());
+        List<RemoteRepository> remotes = Arrays.asList(
+                new RemoteRepository.Builder("maven-central", "default", "http://repo1.maven.org/maven2/").build());
 
-		defaultRepositorySystemSession.setDependencySelector(new DependencySelector() {
-			@Override
-			public boolean selectDependency(Dependency dependency) {
-				return true;
-			}
+        defaultRepositorySystemSession.setDependencySelector(new DependencySelector() {
+            @Override
+            public boolean selectDependency(Dependency dependency) {
+                return true;
+            }
 
-			@Override
-			public DependencySelector deriveChildSelector(DependencyCollectionContext context) {
-				return this;
-			}
-		});
+            @Override
+            public DependencySelector deriveChildSelector(DependencyCollectionContext context) {
+                return this;
+            }
+        });
 
-		DefaultArtifact artifact = new DefaultArtifact("junit", "junit-dep", "", "jar", "4.10");
-		
-		CollectRequest request = new CollectRequest(new Dependency(artifact, null), remotes);
+        DefaultArtifact artifact = new DefaultArtifact("junit", "junit-dep", "", "jar", "4.10");
 
-		CollectResult result = repositorySystem.collectDependencies(defaultRepositorySystemSession, request);
-		DependencyNode root = result.getRoot();
-		root.accept(new DependencyVisitor() {
-			AtomicInteger indent = new AtomicInteger();
+        CollectRequest request = new CollectRequest(new Dependency(artifact, null), remotes);
 
-			@Override
-			public boolean visitEnter(DependencyNode node) {
-				StringBuilder sb = new StringBuilder();
-				int indentLength = indent.getAndIncrement();
-				for (int i = 0; i < indentLength; i++) {
-					sb.append("  ");
-				}
-				System.err.println(sb.toString() + node.getDependency());
-				return true;
-			}
+        CollectResult result = repositorySystem.collectDependencies(defaultRepositorySystemSession, request);
+        DependencyNode root = result.getRoot();
+        root.accept(new DependencyVisitor() {
+            AtomicInteger indent = new AtomicInteger();
 
-			@Override
-			public boolean visitLeave(DependencyNode node) {
-				indent.decrementAndGet();
-				return true;
-			}
-		});
-	}
+            @Override
+            public boolean visitEnter(DependencyNode node) {
+                StringBuilder sb = new StringBuilder();
+                int indentLength = indent.getAndIncrement();
+                for (int i = 0; i < indentLength; i++) {
+                    sb.append("  ");
+                }
+                System.err.println(sb.toString() + node.getDependency());
+                return true;
+            }
 
-	private static RepositorySystem newRepositorySystem() {
-		DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
-		locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
-		locator.addService(TransporterFactory.class, FileTransporterFactory.class);
-		locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
-		return locator.getService(RepositorySystem.class);
-	}
+            @Override
+            public boolean visitLeave(DependencyNode node) {
+                indent.decrementAndGet();
+                return true;
+            }
+        });
+    }
+
+    private static RepositorySystem newRepositorySystem() {
+        DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
+        locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
+        locator.addService(TransporterFactory.class, FileTransporterFactory.class);
+        locator.addService(TransporterFactory.class, HttpTransporterFactory.class);
+        return locator.getService(RepositorySystem.class);
+    }
 
 }

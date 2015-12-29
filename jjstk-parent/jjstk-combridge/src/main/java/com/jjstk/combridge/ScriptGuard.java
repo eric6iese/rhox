@@ -134,7 +134,7 @@ public class ScriptGuard {
     }
 
     private synchronized void togglePause(boolean stop) {
-      /*  if (pauseItem.getState()) {
+        /*  if (pauseItem.getState()) {
 
         } else {
             unschedule();
