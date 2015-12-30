@@ -6,7 +6,6 @@
 package com.jjstk.combridge;
 
 import com.sun.jna.platform.win32.COM.COMException;
-import com.sun.jna.platform.win32.COM.IDispatch;
 import com.sun.jna.platform.win32.OaIdl.DISPID;
 import com.sun.jna.platform.win32.Variant.VARIANT;
 
@@ -21,7 +20,7 @@ import com.sun.jna.platform.win32.Variant.VARIANT;
 public class ComDispatch {
 
     private final String desc;
-    private final Dispatcher dispatcher;
+    final Dispatcher dispatcher;
 
     /**
      * Creates a new JsComDispatch for the given name.
@@ -91,10 +90,9 @@ public class ComDispatch {
     }
 
     private Object toResult(String name, VARIANT v) {
-        Object o = v.getValue();
-        if (o instanceof IDispatch) {
-            Dispatcher dispatchResult = new Dispatcher((IDispatch) o);
-            return new ComDispatch(desc + '.' + name, dispatchResult);
+        Object o = Variants.from(v);
+        if (o instanceof Dispatcher) {
+            return new ComDispatch(desc + '.' + name, (Dispatcher) o);
         }
         return o;
     }

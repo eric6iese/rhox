@@ -6,7 +6,6 @@
 package com.jjstk.combridge;
 
 import com.sun.jna.platform.win32.COM.COMException;
-import com.sun.jna.platform.win32.COM.IDispatch;
 import com.sun.jna.platform.win32.OaIdl.DISPID;
 import com.sun.jna.platform.win32.Variant;
 import com.sun.jna.platform.win32.Variant.VARIANT;
@@ -23,7 +22,7 @@ import jdk.nashorn.api.scripting.AbstractJSObject;
 public class ComObject extends AbstractJSObject {
 
     private final String desc;
-    private final Dispatcher dispatcher;
+    final Dispatcher dispatcher;
     /**
      * 'Remembers' internally which elements are used as properties and which
      * are methods.
@@ -147,10 +146,9 @@ public class ComObject extends AbstractJSObject {
     }
 
     private Object toResult(String name, Variant.VARIANT v) {
-        Object o = v.getValue();
-        if (o instanceof IDispatch) {
-            Dispatcher dispatchResult = new Dispatcher((IDispatch) o);
-            return new ComObject(desc + '.' + name, dispatchResult);
+        Object o = Variants.from(v);
+        if (o instanceof Dispatcher) {
+            return new ComObject(desc + '.' + name, (Dispatcher) o);
         }
         return o;
     }

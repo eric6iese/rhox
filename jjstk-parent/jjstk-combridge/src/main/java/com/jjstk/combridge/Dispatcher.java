@@ -36,10 +36,6 @@ final class Dispatcher extends COMLateBindingObject {
         super(dispatch);
     }
 
-    Dispatcher(VARIANT variant) {
-        this((IDispatch) ((VARIANT) variant).getValue());
-    }
-
     /**
      * Returns the COM-Invocation ID for a given name, which is required for all
      * other methods of this class.<br/>

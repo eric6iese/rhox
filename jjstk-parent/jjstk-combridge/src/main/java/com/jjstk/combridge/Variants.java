@@ -26,7 +26,7 @@ final class Variants {
         if (in instanceof VARIANT) {
             return (VARIANT) in;
         }
-        // Primitives
+        // Native Variant Constructors
         if (in instanceof Boolean) {
             return new VARIANT((boolean) in);
         }
@@ -51,8 +51,6 @@ final class Variants {
         if (in instanceof Double) {
             return new VARIANT((double) in);
         }
-
-        // Other default Variant types
         if (in instanceof Date) {
             return new VARIANT((Date) in);
         }
@@ -67,13 +65,14 @@ final class Variants {
         if (in instanceof CharSequence) {
             return new VARIANT(in.toString());
         }
-        if (in instanceof Number) {
-            Number n = (Number) in;
-            return new VARIANT(n.longValue());
-        }
         if (in instanceof COMBindingBaseObject) {
-            COMBindingBaseObject obj = (COMBindingBaseObject) in;
-            return new VARIANT(obj.getIDispatch());
+            return new VARIANT(((COMBindingBaseObject) in).getIDispatch());
+        }
+        if (in instanceof ComDispatch) {
+            return new VARIANT(((ComDispatch) in).dispatcher.getIDispatch());
+        }
+        if (in instanceof ComObject) {
+            return new VARIANT(((ComObject) in).dispatcher.getIDispatch());
         }
         throw new NoSuchElementException("Unkown type: " + in + "!");
     }
@@ -89,6 +88,24 @@ final class Variants {
         return vars;
     }
 
+    /**
+     * This method is nearly identical to getValue, with only one exception: If
+     * the result is not a primitive Type but an IDispatch, then it will be
+     * returned as a new dispatcher instead.<br/>
+     * Later on, even more conversions might be possible, but for now none of
+     * them are planned.
+     */
+    public static Object from(VARIANT variant) {
+        Object value = variant.getValue();
+        if (value instanceof IDispatch) {
+            return new Dispatcher((IDispatch) value);
+        }
+        return value;
+    }
+
+    /**
+     * Wraps the native ComException into something which is simpler to read...
+     */
     public static RuntimeException newException(String operation, COMException e) {
         OaIdl.EXCEPINFO info = e.getExcepInfo();
         long error = info.wCode.longValue();
