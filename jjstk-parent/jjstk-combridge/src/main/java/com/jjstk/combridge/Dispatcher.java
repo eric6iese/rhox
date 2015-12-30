@@ -1,9 +1,8 @@
 package com.jjstk.combridge;
 
 import com.sun.jna.WString;
-import com.sun.jna.platform.win32.COM.COMBindingBaseObject;
 import static com.sun.jna.platform.win32.COM.COMBindingBaseObject.LOCALE_USER_DEFAULT;
-import java.util.NoSuchElementException;
+import com.sun.jna.platform.win32.COM.COMException;
 
 import com.sun.jna.platform.win32.OleAuto;
 import com.sun.jna.platform.win32.Variant.VARIANT;
@@ -14,7 +13,6 @@ import com.sun.jna.platform.win32.Guid;
 import com.sun.jna.platform.win32.OaIdl.DISPID;
 import com.sun.jna.platform.win32.OaIdl.DISPIDByReference;
 import com.sun.jna.platform.win32.WinNT.HRESULT;
-import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -72,19 +70,13 @@ final class Dispatcher extends COMLateBindingObject {
         return result;
     }
 
-    public void set(DISPID id, Object value) {
-        VARIANT v = var(value);
-        VARIANT[] vars = new VARIANT[]{v};
-        call(OleAuto.DISPATCH_PROPERTYPUT, null, id, vars);
+    public void set(DISPID id, VARIANT value) {
+        call(OleAuto.DISPATCH_PROPERTYPUT, null, id, new VARIANT[]{value});
     }
 
-    public VARIANT invoke(DISPID id, Object... args) {
-        VARIANT[] vars = new VARIANT[args.length];
-        for (int i = 0; i < vars.length; i++) {
-            vars[i] = var(args[i]);
-        }
+    public VARIANT call(DISPID id, VARIANT... args) {
         VARIANT.ByReference result = new VARIANT.ByReference();
-        call(OleAuto.DISPATCH_METHOD, result, id, vars);
+        call(OleAuto.DISPATCH_METHOD, result, id, args);
         return result;
     }
 
@@ -93,60 +85,4 @@ final class Dispatcher extends COMLateBindingObject {
         super.oleMethod(nType, pvResult, pDisp, dispId, pArgs);
     }
 
-    /**
-     * Creates a Variant out of a java object, applying implicit conversions
-     * where necessary.
-     */
-    private static VARIANT var(Object in) {
-        // Primitives
-        if (in instanceof Boolean) {
-            return new VARIANT((boolean) in);
-        }
-        if (in instanceof Byte) {
-            return new VARIANT((byte) in);
-        }
-        if (in instanceof Short) {
-            return new VARIANT((short) in);
-        }
-        if (in instanceof Integer) {
-            return new VARIANT((int) in);
-        }
-        if (in instanceof Long) {
-            return new VARIANT((long) in);
-        }
-        if (in instanceof Character) {
-            return new VARIANT((char) in);
-        }
-        if (in instanceof Float) {
-            return new VARIANT((float) in);
-        }
-        if (in instanceof Double) {
-            return new VARIANT((double) in);
-        }
-
-        // Other default Variant types
-        if (in instanceof Date) {
-            return new VARIANT((Date) in);
-        }
-        if (in instanceof String) {
-            return new VARIANT((String) in);
-        }
-        if (in instanceof IDispatch) {
-            return new VARIANT((IDispatch) in);
-        }
-
-        // Custom Mappings (destructuring)
-        if (in instanceof CharSequence) {
-            return new VARIANT(in.toString());
-        }
-        if (in instanceof Number) {
-            Number n = (Number) in;
-            return new VARIANT(n.longValue());
-        }
-        if (in instanceof COMBindingBaseObject) {
-            COMBindingBaseObject obj = (COMBindingBaseObject) in;
-            return new VARIANT(obj.getIDispatch());
-        }
-        throw new NoSuchElementException("Unkown type: " + in + "!");
-    }
 }

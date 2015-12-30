@@ -7,9 +7,9 @@ package com.jjstk.combridge;
 
 import com.sun.jna.platform.win32.COM.COMException;
 import com.sun.jna.platform.win32.COM.IDispatch;
-import com.sun.jna.platform.win32.OaIdl;
 import com.sun.jna.platform.win32.OaIdl.DISPID;
 import com.sun.jna.platform.win32.Variant;
+import com.sun.jna.platform.win32.Variant.VARIANT;
 import java.util.HashMap;
 import java.util.Map;
 import jdk.nashorn.api.scripting.AbstractJSObject;
@@ -93,7 +93,7 @@ public class ComObject extends AbstractJSObject {
      * Creates a subinstance specially designed for invocations.
      */
     private ComObject methodNode(String name) {
-        return new ComObject(desc + "." + name, dispatcher, fieldTypes, name);
+        return new ComObject(desc + '.' + name, dispatcher, fieldTypes, name);
     }
 
     /**
@@ -105,9 +105,10 @@ public class ComObject extends AbstractJSObject {
     @Override
     public void setMember(String name, Object value) {
         DISPID id = getId(name);
+        VARIANT vValue = Variants.to(value);
         requireType(name, ComType.FIELD);
         try {
-            dispatcher.set(id, value);
+            dispatcher.set(id, vValue);
         } catch (COMException e) {
             throw newException(e);
         }
@@ -127,10 +128,11 @@ public class ComObject extends AbstractJSObject {
      */
     public Object invoke(Object... args) {
         DISPID id = getId(method);
+        VARIANT[] vArgs = Variants.toArray(args);
         requireType(method, ComType.METHOD);
         Variant.VARIANT v;
         try {
-            v = dispatcher.invoke(id, args);
+            v = dispatcher.call(id, vArgs);
         } catch (COMException e) {
             throw newException(e);
         }
@@ -148,24 +150,13 @@ public class ComObject extends AbstractJSObject {
         Object o = v.getValue();
         if (o instanceof IDispatch) {
             Dispatcher dispatchResult = new Dispatcher((IDispatch) o);
-            return new ComObject(name == null ? desc : desc + '.' + name, dispatchResult);
+            return new ComObject(desc + '.' + name, dispatchResult);
         }
         return o;
     }
 
     private RuntimeException newException(COMException e) {
-        long error = getErrorCode(e);
-        OaIdl.EXCEPINFO info = e.getExcepInfo();
-        String source = info.bstrSource.getValue();
-        String description = info.bstrDescription.getValue();
-        return new UnsupportedOperationException(
-                String.format("%s failed! ErrorCode: %s, Source: %s, Message: %s", desc, error, source, description));
-    }
-
-    long getErrorCode(COMException e) {
-        OaIdl.EXCEPINFO info = e.getExcepInfo();
-        long error = info.wCode.longValue();
-        return error != 0L ? error : info.scode.longValue();
+        return Variants.newException(desc, e);
     }
 
     /**
