@@ -1,11 +1,11 @@
 // Imports
-var Class = java.lang.Class;
-var File = java.io.File;
-var Paths = java.nio.file.Paths;
-var Files = java.nio.file.Files;
-var URLClassLoader = java.net.URLClassLoader;
-var URL = java.net.URL;
-var Thread = java.lang.Thread;
+var Class = Java.type('java.lang.Class');
+var File = Java.type('java.io.File');
+var Paths = Java.type('java.nio.file.Paths');
+var Files = Java.type('java.nio.file.Files');
+var URLClassLoader = Java.type('java.net.URLClassLoader');
+var URL = Java.type('java.net.URL');
+var Thread = Java.type('java.lang.Thread');
 
 /**
  * A JavaModule is a separate unit which encapsulates the results of a given classloader or set of urls.
