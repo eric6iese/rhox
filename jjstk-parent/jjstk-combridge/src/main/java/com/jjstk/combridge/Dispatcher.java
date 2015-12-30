@@ -46,7 +46,7 @@ final class Dispatcher extends COMLateBindingObject {
 
     public VARIANT invoke(String method, Object... args) {
         DISPID id = getId(method);
-        return invoke(method, args);
+        return invoke(id, args);
     }
 
     /**
