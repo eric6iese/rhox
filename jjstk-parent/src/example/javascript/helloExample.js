@@ -1,11 +1,12 @@
 load(java.lang.System.getProperty('user.home') + '/jjstk/bootstrap.js');
 
 var combridge = require('jjstk-combridge');
+var ComObject = combridge.ComObject;
 
 var System = Java.type('java.lang.System')
 var Runtime = Java.type('java.lang.Runtime')
 
-var au = combridge.newComObject("AutoItX3.Control");
+var au = new ComObject("AutoItX3.Control");
 
 function assertWinExists(value) {
     var result = au.winExists(notepad, testString);

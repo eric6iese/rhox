@@ -8,6 +8,7 @@ package com.jjstk.combridge;
 import com.sun.jna.platform.win32.COM.COMException;
 import com.sun.jna.platform.win32.COM.IDispatch;
 import com.sun.jna.platform.win32.OaIdl;
+import com.sun.jna.platform.win32.OaIdl.DISPID;
 import com.sun.jna.platform.win32.Variant;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,32 +20,37 @@ import jdk.nashorn.api.scripting.AbstractJSObject;
  * com-objects anyway).
  */
 @SuppressWarnings("restriction")
-public class JsCom extends AbstractJSObject {
-
-    /**
-     * Creates a new ComObject with the given name (or connects to it).
-     */
-    public static JsCom connect(String name) {
-        return new JsCom(name, new Dispatcher(name));
-    }
+public class ComObject extends AbstractJSObject {
 
     private final String desc;
     private final Dispatcher dispatcher;
     /**
-     * Internal Cache which stores all display ids (and types) after an element
-     * has been resolved.
+     * 'Remembers' internally which elements are used as properties and which
+     * are methods.
      */
-    private final Map<String, ComField> fieldCache;
+    private final Map<String, ComType> fieldTypes;
     private final String method;
 
-    private JsCom(String desc, Dispatcher dispatcher) {
+    /**
+     * Creates a new JsComObject for the given com name.
+     *
+     * @param name the com name
+     */
+    public ComObject(String name) {
+        this(name, new Dispatcher(name));
+    }
+
+    /**
+     * Internal helper constructor.
+     */
+    private ComObject(String desc, Dispatcher dispatcher) {
         this(desc, dispatcher, new HashMap<>(), null);
     }
 
-    private JsCom(String desc, Dispatcher dispatcher, Map<String, ComField> fieldCache, String method) {
+    private ComObject(String desc, Dispatcher dispatcher, Map<String, ComType> fieldTypes, String method) {
         this.desc = desc;
         this.dispatcher = dispatcher;
-        this.fieldCache = fieldCache;
+        this.fieldTypes = fieldTypes;
         this.method = method;
     }
 
@@ -61,30 +67,33 @@ public class JsCom extends AbstractJSObject {
      */
     @Override
     public Object getMember(String name) {
-        ComField field = getId(name, ComField.Type.FIELD);
-        if (field.isType(ComField.Type.METHOD)) {
+        // Get id FIRST - if this operation fails then no field/ method parsing is necessary
+        DISPID id = getId(name);
+
+        ComType type = fieldTypes.get(name);
+        if (ComType.METHOD.equals(type)) {
             return methodNode(name);
         }
         Variant.VARIANT v;
         try {
-            v = dispatcher.get(field.id);
+            v = dispatcher.get(id);
         } catch (COMException e) {
             return methodNode(name);
         }
-        int type = v.getVarType().intValue();
-        if (type == Variant.VT_EMPTY) {
+        int vtype = v.getVarType().intValue();
+        if (vtype == Variant.VT_EMPTY) {
             return methodNode(name);
         }
         Object result = toResult(name, v);
-        putToCache(field);
+        setType(name, ComType.FIELD);
         return result;
     }
 
     /**
      * Creates a subinstance specially designed for invocations.
      */
-    private JsCom methodNode(String name) {
-        return new JsCom(desc + "." + name, dispatcher, fieldCache, name);
+    private ComObject methodNode(String name) {
+        return new ComObject(desc + "." + name, dispatcher, fieldTypes, name);
     }
 
     /**
@@ -95,14 +104,14 @@ public class JsCom extends AbstractJSObject {
      */
     @Override
     public void setMember(String name, Object value) {
-        ComField field = getId(name, ComField.Type.FIELD);
-        field.requireType(ComField.Type.FIELD);
+        DISPID id = getId(name);
+        requireType(name, ComType.FIELD);
         try {
-            dispatcher.set(field.id, value);
+            dispatcher.set(id, value);
         } catch (COMException e) {
             throw newException(e);
         }
-        putToCache(field);
+        setType(name, ComType.FIELD);
     }
 
     @Override
@@ -117,16 +126,16 @@ public class JsCom extends AbstractJSObject {
      * @return the result of the invocation
      */
     public Object invoke(Object... args) {
-        ComField field = getId(method, ComField.Type.METHOD);
-        field.requireType(ComField.Type.METHOD);
+        DISPID id = getId(method);
+        requireType(method, ComType.METHOD);
         Variant.VARIANT v;
         try {
-            v = dispatcher.invoke(field.id, args);
+            v = dispatcher.invoke(id, args);
         } catch (COMException e) {
             throw newException(e);
         }
         Object result = toResult(desc + "()", v);
-        putToCache(field);
+        setType(method, ComType.METHOD);
         return result;
     }
 
@@ -139,7 +148,7 @@ public class JsCom extends AbstractJSObject {
         Object o = v.getValue();
         if (o instanceof IDispatch) {
             Dispatcher dispatchResult = new Dispatcher((IDispatch) o);
-            return new JsCom(name == null ? desc : desc + '.' + name, dispatchResult);
+            return new ComObject(name == null ? desc : desc + '.' + name, dispatchResult);
         }
         return o;
     }
@@ -160,26 +169,36 @@ public class JsCom extends AbstractJSObject {
     }
 
     /**
-     * Caches the id and and type, if they have not already been cached.
-     */
-    private void putToCache(ComField field) {
-        fieldCache.putIfAbsent(field.name, field);
-    }
-
-    /**
      * Gets the display id for the given name or creates a new one.
      */
-    private ComField getId(String name, ComField.Type type) {
-        ComField field = fieldCache.get(name);
-        if (field != null) {
-            return field;
-        }
-        OaIdl.DISPID id;
+    private DISPID getId(String name) {
         try {
-            id = dispatcher.getId(name);
+            return dispatcher.getId(name);
         } catch (COMException e) {
             throw newException(e);
         }
-        return new ComField(name, id, type);
+    }
+
+    /**
+     * Caches the id and and type, if they have not already been cached.
+     */
+    private void setType(String name, ComType type) {
+        fieldTypes.putIfAbsent(name, type);
+    }
+
+    /**
+     * Tests if this field with the given name is of the given type. Throws an
+     * exception otherwise.
+     */
+    private void requireType(String name, ComType type) {
+        ComType ctype = fieldTypes.get(name);
+        if (ctype == null) {
+            return;
+        }
+        if (ctype.equals(type)) {
+            return;
+        }
+        throw new UnsupportedOperationException("Name '" + name + "' was already resolved as a "
+                + ctype + " but required was a " + type + "!");
     }
 }

@@ -15,12 +15,20 @@ import com.sun.jna.platform.win32.OaIdl.DISPID;
 import com.sun.jna.platform.win32.OaIdl.DISPIDByReference;
 import com.sun.jna.platform.win32.WinNT.HRESULT;
 import java.util.Date;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A wrapper for the JNA-specific functionality which is required for the
  * combridge.
  */
 final class Dispatcher extends COMLateBindingObject {
+
+    /**
+     * Internal Cache which stores all display ids (and types) after an element
+     * has been resolved.
+     */
+    private final Map<String, DISPID> idCache = new ConcurrentHashMap<>();
 
     Dispatcher(String name) {
         super(name, false);
@@ -34,39 +42,28 @@ final class Dispatcher extends COMLateBindingObject {
         this((IDispatch) ((VARIANT) variant).getValue());
     }
 
-    public VARIANT get(String member) {
-        DISPID id = getId(member);
-        return get(id);
-    }
-
-    public void set(String member, Object value) {
-        DISPID id = getId(member);
-        set(id, value);
-    }
-
-    public VARIANT invoke(String method, Object... args) {
-        DISPID id = getId(method);
-        return invoke(id, args);
-    }
-
     /**
-     * Returns the COM-Invocation ID for a given name. This call is part of any
-     * of the other 3 in order to know how to invoke a method.<br/>
-     * It can be used for a single call in order to improve performance or just
-     * to check if a method is available at all.
+     * Returns the COM-Invocation ID for a given name, which is required for all
+     * other methods of this class.<br/>
+     * If an id is found, then it will be cached after the first call.
+     *
+     * @throws COMException if the calculation of the id failed, for example
+     * because no mapping exists
      */
     public DISPID getId(String name) {
-        // variable declaration
-        WString[] ptName = new WString[]{new WString(name)};
-        DISPIDByReference pdispID = new DISPIDByReference();
+        return idCache.computeIfAbsent(name, n -> {
+            // variable declaration
+            WString[] ptName = {new WString(n)};
+            DISPIDByReference pdispID = new DISPIDByReference();
 
-        // Get DISPID for name passed...
-        IDispatch pDisp = getIDispatch();
-        HRESULT hr = pDisp.GetIDsOfNames(new Guid.REFIID.ByValue(Guid.IID_NULL), ptName, 1,
-                LOCALE_USER_DEFAULT, pdispID);
+            // Get DISPID for name passed...
+            IDispatch pDisp = getIDispatch();
+            HRESULT hr = pDisp.GetIDsOfNames(new Guid.REFIID.ByValue(Guid.IID_NULL), ptName, 1,
+                    LOCALE_USER_DEFAULT, pdispID);
 
-        COMUtils.checkRC(hr);
-        return pdispID.getValue();
+            COMUtils.checkRC(hr);
+            return pdispID.getValue();
+        });
     }
 
     public VARIANT get(DISPID id) {
