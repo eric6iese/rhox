@@ -14,6 +14,21 @@ function assertWinExists(value) {
     }
 }
 
+try {
+    au.thisValueDoesNeverExist;
+    System.out.println("hätte fehlschlagen müssen!");
+} catch (e) {
+    System.out.println("ok, fehler hier erwartet!");
+}
+
+
+try {
+    au.thisMethodDoesNeverExist();
+    System.out.println("hätte fehlschlagen müssen!");
+} catch (e) {
+    System.out.println("ok, fehler hier erwartet!");
+}
+
 var notepad = "Unbenannt - Editor";
 var testString = "this is a test.";
 
