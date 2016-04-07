@@ -9,7 +9,6 @@
     <includeBaseDirectory>false</includeBaseDirectory>
     <dependencySets>
         <dependencySet>
-            <scope>compile</scope>
             <useProjectArtifact>true</useProjectArtifact>
             <unpack>false</unpack>
             <outputDirectory>/lib/</outputDirectory>

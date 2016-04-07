@@ -1,12 +1,10 @@
 package com.jjstk.jclasspath;
 
 import java.io.File;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-
+import org.eclipse.aether.repository.AuthenticationSelector;
+import org.eclipse.aether.repository.MirrorSelector;
+import org.eclipse.aether.repository.ProxySelector;
 import org.eclipse.aether.repository.RemoteRepository;
 
 /**
@@ -17,16 +15,22 @@ final class DependencyConfiguration {
     private final File localRepository;
     private final List<RemoteRepository> remoteRepositories;
 
-    public static DependencyConfiguration getMavenDefault() {
-        return new DependencyConfiguration(Paths.get(System.getProperty("user.home"), ".m2", "repository").toFile(),
-                Arrays.asList(new RemoteRepository.Builder("maven-central", "default", "http://repo1.maven.org/maven2/")
-                        .build()));
+    private final ProxySelector proxySelector;
+    private final MirrorSelector mirrorSelector;
+    private final AuthenticationSelector authSelector;
+    private final boolean offline;
 
+    DependencyConfiguration(File localRepository, List<RemoteRepository> remotes) {
+        this(localRepository, remotes, null, null, null, false);
     }
 
-    public DependencyConfiguration(File localRepository, List<RemoteRepository> remotes) {
+    DependencyConfiguration(File localRepository, List<RemoteRepository> remoteRepositories, ProxySelector proxySelector, MirrorSelector mirrorSelector, AuthenticationSelector authSelector, boolean offline) {
         this.localRepository = localRepository;
-        this.remoteRepositories = Collections.unmodifiableList(new ArrayList<>(remotes));
+        this.remoteRepositories = remoteRepositories;
+        this.proxySelector = proxySelector;
+        this.mirrorSelector = mirrorSelector;
+        this.authSelector = authSelector;
+        this.offline = offline;
     }
 
     public File getLocalRepository() {
@@ -37,4 +41,19 @@ final class DependencyConfiguration {
         return remoteRepositories;
     }
 
+    public ProxySelector getProxySelector() {
+        return proxySelector;
+    }
+
+    public MirrorSelector getMirrorSelector() {
+        return mirrorSelector;
+    }
+
+    public AuthenticationSelector getAuthSelector() {
+        return authSelector;
+    }
+
+    public boolean isOffline() {
+        return offline;
+    }
 }

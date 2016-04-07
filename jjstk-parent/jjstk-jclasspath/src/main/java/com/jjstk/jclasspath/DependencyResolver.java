@@ -2,10 +2,14 @@ package com.jjstk.jclasspath;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
+import org.eclipse.aether.ConfigurationProperties;
+import org.eclipse.aether.DefaultRepositoryCache;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.RepositorySystem;
@@ -39,21 +43,42 @@ final class DependencyResolver {
     private final DefaultRepositorySystemSession session;
 
     public DependencyResolver() {
-        this(DependencyConfiguration.getMavenDefault());
+        this(MavenSettings.getDefault().toConfig());
     }
 
     public DependencyResolver(DependencyConfiguration cfg) {
-        this.cfg = DependencyConfiguration.getMavenDefault();
+        this.cfg = cfg;
 
         repositorySystem = newRepositorySystem();
         session = MavenRepositorySystemUtils.newSession();
 
+        session.setOffline(cfg.isOffline());
+
         final LocalRepository local = new LocalRepository(cfg.getLocalRepository());
         session.setLocalRepositoryManager(repositorySystem.newLocalRepositoryManager(session, local));
 
+        session.setProxySelector(cfg.getProxySelector());
+        session.setMirrorSelector(cfg.getMirrorSelector());
+        session.setAuthenticationSelector(cfg.getAuthSelector());
+
+        session.setCache(new DefaultRepositoryCache());
         session.setTransferListener(new ConsoleTransferListener());
         session.setRepositoryListener(new ConsoleRepositoryListener());
 
+        // Configuration
+        Map<Object, Object> configProps = new LinkedHashMap<>();
+        configProps.put(ConfigurationProperties.USER_AGENT, getUserAgent());
+        session.setConfigProperties(configProps);
+    }
+
+    private String getUserAgent() {
+        StringBuilder buffer = new StringBuilder();
+        buffer.append("Java ").append(System.getProperty("java.version"));
+        buffer.append("; ");
+        buffer.append(System.getProperty("os.name")).append(" ").append(System.getProperty("os.version"));
+        buffer.append(")");
+        buffer.append(" Aether");
+        return buffer.toString();
     }
 
     /**

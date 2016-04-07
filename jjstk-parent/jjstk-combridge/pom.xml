@@ -8,7 +8,7 @@
     </parent>
     <artifactId>jjstk-combridge</artifactId>
 
-    <dependencies>        
+    <dependencies>
         <dependency>
             <groupId>com.jjstk</groupId>
             <artifactId>jjstk-jclasspath</artifactId>
