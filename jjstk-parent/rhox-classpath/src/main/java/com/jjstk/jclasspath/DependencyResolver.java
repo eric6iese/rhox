@@ -131,13 +131,8 @@ final class DependencyResolver {
 
     private CollectRequest newCollectRequest(Collection<Artifact> artifacts) {
         List<RemoteRepository> repos = cfg.getRemoteRepositories();
-        ProxySelector proxySelector = session.getProxySelector();
-        if (proxySelector != null) {
-            repos = new ArrayList<>(repos);
-            repos.replaceAll(repo -> {
-                return new RemoteRepository.Builder(repo).setProxy(proxySelector.getProxy(repo)).build();
-            });
-        }
+        repos = assignProxy(repos);
+        repos = assignMirrors(repos);
         return new CollectRequest(toDependencies(artifacts), null, repos);
     }
 
@@ -146,43 +141,52 @@ final class DependencyResolver {
     }
 
     /**
-     * TODO: Evaluate if this is better!
+     * Apply proxy servers
      */
-    private void assignProxyAndMirrors(List<RemoteRepository> remoteRepos) {
+    private List<RemoteRepository> assignProxy(List<RemoteRepository> remoteRepos) {
+        ProxySelector proxySelector = session.getProxySelector();
+        if (proxySelector == null) {
+            return remoteRepos;
+        }
+        return remoteRepos.stream().
+                map(repo -> new RemoteRepository.Builder(repo).setProxy(proxySelector.getProxy(repo)).build()).
+                collect(Collectors.toList());
+    }
+
+    /**
+     * Apply mirrors (untested!)
+     */
+    private List<RemoteRepository> assignMirrors(List<RemoteRepository> remoteRepos) {
+        MirrorSelector mirrorSelector = session.getMirrorSelector();
+        if (mirrorSelector == null) {
+            return remoteRepos;
+        }
         Map<String, List<String>> map = new HashMap<>();
         Map<String, RemoteRepository> naming = new HashMap<>();
-
-        ProxySelector proxySelector = session.getProxySelector();
-        MirrorSelector mirrorSelector = session.getMirrorSelector();
-
         for (RemoteRepository r : remoteRepos) {
             naming.put(r.getId(), r);
-
-            r.setProxy(proxySelector.getProxy(r));
-
             RemoteRepository mirror = mirrorSelector.getMirror(r);
             if (mirror != null) {
                 String key = mirror.getId();
                 naming.put(key, mirror);
                 if (!map.containsKey(key)) {
-                    map.put(key, new ArrayList<String>());
+                    map.put(key, new ArrayList<>());
                 }
                 List<String> mirrored = map.get(key);
                 mirrored.add(r.getId());
             }
         }
-
+        remoteRepos = new ArrayList<>(remoteRepos);
         for (String mirrorId : map.keySet()) {
             RemoteRepository mirror = naming.get(mirrorId);
-            List<RemoteRepository> mirroedRepos = new ArrayList<RemoteRepository>();
-
+            List<RemoteRepository> mirroedRepos = new ArrayList<>();
             for (String rep : map.get(mirrorId)) {
                 mirroedRepos.add(naming.get(rep));
             }
-            mirror.setMirroredRepositories(mirroedRepos);
             remoteRepos.removeAll(mirroedRepos);
-            remoteRepos.add(0, mirror);
+            remoteRepos.add(0, new RemoteRepository.Builder(mirror).setMirroredRepositories(mirroedRepos).build());
         }
-
+        return remoteRepos;
     }
+
 }

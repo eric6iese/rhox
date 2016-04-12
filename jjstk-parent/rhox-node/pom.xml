@@ -6,25 +6,10 @@
         <artifactId>jjstk-parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>jjstk-combridge</artifactId>
-
+    <artifactId>rhox-node</artifactId>
+    <description>... This is an attempt to create a minimal wrapper to use some node libraries on nashorn.
+    It does NOT aim to be a real node environment!</description>
     <dependencies>
-        <dependency>
-            <groupId>com.jjstk</groupId>
-            <artifactId>jjstk-jclasspath</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.java.dev.jna</groupId>
-            <artifactId>jna-platform</artifactId>
-            <version>4.2.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.jjstk</groupId>
-            <artifactId>jjstk-test</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>
@@ -52,5 +37,5 @@
             </plugin>
         </plugins>
     </build>
-
+    <name>rhox-node</name>
 </project>

@@ -2,11 +2,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.jjstk</groupId>
+        <groupId>com.rhox</groupId>
         <artifactId>jjstk-parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>jjstk-test</artifactId>
+    <artifactId>rhox-test</artifactId>
     <description>Internal Project, provides the test-infrastructure with jasmine for the other jjstk-projects.
         It uses a custom variant of the brilliant Jasmine-JUnit-Runner(https://github.com/hhelwich/junit-jasmine-runner)
         to make all tests fully compatible with maven AND the IDE's.
@@ -25,4 +25,5 @@
             <artifactId>junit-jasmine-runner</artifactId>
         </dependency>
     </dependencies>
+    <name>rhox-test</name>
 </project>

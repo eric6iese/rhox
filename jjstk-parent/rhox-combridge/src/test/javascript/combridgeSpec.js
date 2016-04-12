@@ -1,4 +1,4 @@
-var combridge = require('jjstk-combridge');
+var combridge = require('rhox-combridge');
 
 describe("comboject", function () {
     it("does wonderful things", function () {

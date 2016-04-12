@@ -1,6 +1,6 @@
-var jclasspath = require("jjstk-jclasspath");
+var jclasspath = require("rhox-classpath");
 
-describe("internal jclasspath", function () {
+describe("internal classpath", function () {
     it("cannot access by default", function () {
         var Throwables;
         try {

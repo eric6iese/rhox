@@ -1,6 +1,6 @@
 /**
  * Global (non-module) definitions for jjs-scripting.
- * This script must be called once by all jjstk-scripts in order to get all
+ * This script must be called once by all rhox-scripts in order to get all
  * global types and functions like console or require().
  * @author Eric Giese
  */
