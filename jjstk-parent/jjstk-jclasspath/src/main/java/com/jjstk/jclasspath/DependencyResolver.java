@@ -1,7 +1,9 @@
 package com.jjstk.jclasspath;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +23,9 @@ import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.repository.LocalRepository;
+import org.eclipse.aether.repository.MirrorSelector;
+import org.eclipse.aether.repository.ProxySelector;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
@@ -125,11 +130,59 @@ final class DependencyResolver {
     }
 
     private CollectRequest newCollectRequest(Collection<Artifact> artifacts) {
-        return new CollectRequest(toDependencies(artifacts), //
-                null, cfg.getRemoteRepositories());
+        List<RemoteRepository> repos = cfg.getRemoteRepositories();
+        ProxySelector proxySelector = session.getProxySelector();
+        if (proxySelector != null) {
+            repos = new ArrayList<>(repos);
+            repos.replaceAll(repo -> {
+                return new RemoteRepository.Builder(repo).setProxy(proxySelector.getProxy(repo)).build();
+            });
+        }
+        return new CollectRequest(toDependencies(artifacts), null, repos);
     }
 
     private List<Dependency> toDependencies(Collection<Artifact> artifacts) {
         return artifacts.stream().map(artifact -> new org.eclipse.aether.graph.Dependency(artifact, JavaScopes.COMPILE)).collect(Collectors.toList());
+    }
+
+    /**
+     * TODO: Evaluate if this is better!
+     */
+    private void assignProxyAndMirrors(List<RemoteRepository> remoteRepos) {
+        Map<String, List<String>> map = new HashMap<>();
+        Map<String, RemoteRepository> naming = new HashMap<>();
+
+        ProxySelector proxySelector = session.getProxySelector();
+        MirrorSelector mirrorSelector = session.getMirrorSelector();
+
+        for (RemoteRepository r : remoteRepos) {
+            naming.put(r.getId(), r);
+
+            r.setProxy(proxySelector.getProxy(r));
+
+            RemoteRepository mirror = mirrorSelector.getMirror(r);
+            if (mirror != null) {
+                String key = mirror.getId();
+                naming.put(key, mirror);
+                if (!map.containsKey(key)) {
+                    map.put(key, new ArrayList<String>());
+                }
+                List<String> mirrored = map.get(key);
+                mirrored.add(r.getId());
+            }
+        }
+
+        for (String mirrorId : map.keySet()) {
+            RemoteRepository mirror = naming.get(mirrorId);
+            List<RemoteRepository> mirroedRepos = new ArrayList<RemoteRepository>();
+
+            for (String rep : map.get(mirrorId)) {
+                mirroedRepos.add(naming.get(rep));
+            }
+            mirror.setMirroredRepositories(mirroedRepos);
+            remoteRepos.removeAll(mirroedRepos);
+            remoteRepos.add(0, mirror);
+        }
+
     }
 }

@@ -98,7 +98,6 @@ class MavenSettings {
 
     public ProxySelector getProxySelector() {
         DefaultProxySelector selector = new DefaultProxySelector();
-
         for (org.apache.maven.settings.Proxy proxy : settings.getProxies()) {
             AuthenticationBuilder auth = new AuthenticationBuilder();
             auth.addUsername(proxy.getUsername()).addPassword(proxy.getPassword());
@@ -106,31 +105,26 @@ class MavenSettings {
                     proxy.getPort(), auth.build()),
                     proxy.getNonProxyHosts());
         }
-
         return selector;
     }
 
     public MirrorSelector getMirrorSelector() {
         DefaultMirrorSelector selector = new DefaultMirrorSelector();
-
         for (org.apache.maven.settings.Mirror mirror : settings.getMirrors()) {
             selector.add(String.valueOf(mirror.getId()), mirror.getUrl(), mirror.getLayout(), false,
                     mirror.getMirrorOf(), mirror.getMirrorOfLayouts());
         }
-
         return selector;
     }
 
     public AuthenticationSelector getAuthSelector() {
         DefaultAuthenticationSelector selector = new DefaultAuthenticationSelector();
-
         for (Server server : settings.getServers()) {
             AuthenticationBuilder auth = new AuthenticationBuilder();
             auth.addUsername(server.getUsername()).addPassword(server.getPassword());
             auth.addPrivateKey(server.getPrivateKey(), server.getPassphrase());
             selector.add(server.getId(), auth.build());
         }
-
         return new ConservativeAuthenticationSelector(selector);
     }
 
