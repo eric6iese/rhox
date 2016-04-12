@@ -31,17 +31,6 @@
                 <version>${project.version}</version>
             </dependency>
             
-            <dependency>
-                <groupId>com.hynnet</groupId>
-                <artifactId>jacob</artifactId>
-                <version>1.18</version>
-            </dependency>
-            <dependency>
-                <groupId>com.squareup</groupId>
-                <artifactId>javapoet</artifactId>
-                <version>1.4.0</version>
-            </dependency>
-            
             <!-- Test dependencies -->
             <dependency>
                 <groupId>junit</groupId>
@@ -119,8 +108,7 @@
         </plugins>
     </build>
     <modules>
-        <!-- <module>jautoit-poet</module> -->
-        <module>rhox-node</module>
+        <!-- <module>rhox-node</module> -->
         <module>rhox-classpath</module>
         <module>rhox-combridge</module>
         <module>rhox-test</module>

@@ -8,7 +8,34 @@
     </parent>
     <artifactId>rhox-node</artifactId>
     <description>... This is an attempt to create a minimal wrapper to use some node libraries on nashorn.
-    It does NOT aim to be a real node environment!</description>
+    It does NOT aim to be a real node environment!
+    
+    Project structure information:
+    Currently, I do not know if i really want do to this.
+    It would be an awful lot of work, and i'm not really sure if it will provide enough of
+    a benefit.
+        
+    There are 3 different ways to realize this concept:
+    1. Just create individual polyfill functions as a best-meant effort.
+    2. Reuse the entire node.js sources and create the bindings which the functions
+        rely upon
+    3. Something in between: Try to create the binding first, but if its too much then
+        switch to handcoding.
+        
+    The only portable solution would be (2), but the main problem here is that its hard to make a start:
+        Most node libraries dependent on other node-libraries so that to use just one source file i first
+        have to create and bind them all.
+        Another problem is that for some functions, creating a binding would  be very hard as the
+        functions are tailored for low-level c.
+    On the other hand, because js tends to be very lazy it might be worth it to try to implement just
+        some simple functions as bindings: If a function is missing, the system WILL fail, but who cares?
+        The nice part is that i can create most of the bindings in java instead of a system language,
+        esp. stuff like IO.
+        The bad part is that some conceptual differences are HARD to bridge, like the missing event-loop
+        which has to be created to even use a single async function!
+        
+    I don't know if I am (or will ever be) ready to do this. I would only if a partial implementation is
+        possible, and in no other scenario at all.</description>
     <dependencies>
     </dependencies>
 

@@ -56,13 +56,3 @@ try {
     word.Quit();
 }
 ```
-
-## rhox-node (planned)
-First things first: No, this is NOT another avatar or nodyn!
-rhox-node will be a simple compatibility layer which emulates SOME node libraries with appropiate jdk functionality, like
-files, os path... The main target of this is to allow you to use native node libraries on nashorn, like for example shelljs.
-
-It is not clear if this will work as expected, but stay tuned.
-Major disclaimer: The biggest hurdle will be entering the eventloop, as the nashorn main-function isn't one by default.
-We will see how this turns out.
-Up to that point, only sync functions will be provided (enough for shelljs, but useless for most if not all others)
