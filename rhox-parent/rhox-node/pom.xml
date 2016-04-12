@@ -35,7 +35,22 @@
         which has to be created to even use a single async function!
         
     I don't know if I am (or will ever be) ready to do this. I would only if a partial implementation is
-        possible, and in no other scenario at all.</description>
+        possible, and in no other scenario at all.
+    
+    Futher notes on this effort:
+    nodyn really has done this, and I guess they have done it pretty well.
+    Sooo it should be possible to rely on nodyn to provide this functionality.
+    And what does this have to do with rhox?
+    Well... if I really want to use nodyn then I have to integrate it, and that means effort since the
+    project is no longer maintained. So even if I can skip the implementation part I have to accept
+    that the project will fail to work very soon.
+    The only options to prevent this would to either stay at the last fixed version which nodyn had used
+        or to track important changes by myself (no?)
+    Also, I still have to integrate the nodyn stack with all its dependencies in a simple, skriptlike manner on
+    the fly, something which really isn't that easy even if the code is availabe. Remember, rhox tries
+    to use scripts and code at runtime - and not to launche a node-framework upfront.
+    </description>
+        
     <dependencies>
     </dependencies>
 
