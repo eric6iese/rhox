@@ -16,12 +16,12 @@ final class ConsoleRepositoryListener extends AbstractRepositoryListener {
 
     @Override
     public void artifactDeployed(RepositoryEvent event) {
-        LOG.info("Deployed {} to {}" + event.getArtifact(), event.getRepository());
+        LOG.info("Deployed {}", event.getArtifact());
     }
 
     @Override
     public void artifactDeploying(RepositoryEvent event) {
-        LOG.info("Deploying {} to {}", event.getArtifact(), event.getRepository());
+        LOG.info("Deploying artifact {} to {}", event.getArtifact(), event.getRepository());
     }
 
     @Override
@@ -31,22 +31,22 @@ final class ConsoleRepositoryListener extends AbstractRepositoryListener {
 
     @Override
     public void artifactDescriptorMissing(RepositoryEvent event) {
-        LOG.warn("Missing artifact descriptor for {}", event.getArtifact());
-    }
-
-    @Override
-    public void artifactInstalled(RepositoryEvent event) {
-        LOG.info("Installed {} to {}", event.getArtifact(), event.getFile());
+        LOG.warn("Missing artifact descriptor for " + event.getArtifact(), event.getException());
     }
 
     @Override
     public void artifactInstalling(RepositoryEvent event) {
-        LOG.info("Installing {} to {}", event.getArtifact(), event.getFile());
+        LOG.info("Installing artifact {} to {}", event.getArtifact(), event.getFile());
     }
 
     @Override
-    public void artifactResolved(RepositoryEvent event) {
-        LOG.debug("Resolved artifact {} from {}", event.getArtifact(), event.getRepository());
+    public void artifactInstalled(RepositoryEvent event) {
+        if (event.getException() != null) {
+            // this is logged by the transfer listener
+            LOG.error("Installing artifact " + event.getArtifact() + " failed!");
+            return;
+        }
+        LOG.info("Installed artifact {}", event.getArtifact());
     }
 
     @Override
@@ -56,12 +56,27 @@ final class ConsoleRepositoryListener extends AbstractRepositoryListener {
 
     @Override
     public void artifactDownloaded(RepositoryEvent event) {
-        LOG.info("Downloaded artifact {} from {}", event.getArtifact(), event.getRepository());
+        if (event.getException() != null) {
+            // this is logged by the transfer listener
+            LOG.error("Download of artifact " + event.getArtifact() + " failed.");
+            return;
+        }
+        LOG.info("Downloaded artifact {}", event.getArtifact());
     }
 
     @Override
     public void artifactResolving(RepositoryEvent event) {
-        LOG.debug("Resolving artifact {}", event.getArtifact());
+        LOG.debug("Resolving artifact {} from {}", event.getArtifact(), event.getRepository());
+    }
+
+    @Override
+    public void artifactResolved(RepositoryEvent event) {
+        if (event.getException() != null) {
+            // this is logged by the transfer listener (?)
+            LOG.error("Resolving artifact " + event.getArtifact() + " failed.");
+            return;
+        }
+        LOG.debug("Resolved artifact {}", event.getArtifact());
     }
 
     @Override

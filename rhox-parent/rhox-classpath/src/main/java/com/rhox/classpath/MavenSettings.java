@@ -98,13 +98,15 @@ class MavenSettings {
 
     public ProxySelector getProxySelector() {
         DefaultProxySelector selector = new DefaultProxySelector();
-        for (org.apache.maven.settings.Proxy proxy : settings.getProxies()) {
-            AuthenticationBuilder auth = new AuthenticationBuilder();
-            auth.addUsername(proxy.getUsername()).addPassword(proxy.getPassword());
-            selector.add(new org.eclipse.aether.repository.Proxy(proxy.getProtocol(), proxy.getHost(),
-                    proxy.getPort(), auth.build()),
-                    proxy.getNonProxyHosts());
-        }
+        settings.getProxies().stream().
+                filter(org.apache.maven.settings.Proxy::isActive).
+                forEach(proxy -> {
+                    AuthenticationBuilder auth = new AuthenticationBuilder();
+                    auth.addUsername(proxy.getUsername()).addPassword(proxy.getPassword());
+                    selector.add(new org.eclipse.aether.repository.Proxy(proxy.getProtocol(), proxy.getHost(),
+                            proxy.getPort(), auth.build()),
+                            proxy.getNonProxyHosts());
+                });
         return selector;
     }
 

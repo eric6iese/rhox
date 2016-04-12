@@ -1,5 +1,17 @@
 load(java.lang.System.getProperty('user.home') + '/rhox/bootstrap.js');
 
+
+// Set the root logger to all
+java.util.logging.Logger.getLogger("").setLevel(java.util.logging.Level.ALL);
+
+// Enable http wire logging by setting its logger to info!
+// does not work? i dont get anything out?
+java.util.logging.Logger.getLogger("org.apache.http.wire").setLevel(java.util.logging.Level.FINEST);
+java.util.logging.Logger.getLogger("org.apache.http").setLevel(java.util.logging.Level.FINEST);
+
+// disable rhox logging for fun
+java.util.logging.Logger.getLogger("com.rhox.classpath").setLevel(java.util.logging.Level.SEVERE);
+
 var System = java.lang.System;
 System.out.println(System.getProperty("user.dir"));
 
