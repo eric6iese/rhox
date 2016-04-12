@@ -120,7 +120,7 @@
     </build>
     <modules>
         <!-- <module>jautoit-poet</module> -->
-        <!-- <module>rhox-node</module> -->
+        <module>rhox-node</module>
         <module>rhox-classpath</module>
         <module>rhox-combridge</module>
         <module>rhox-test</module>
