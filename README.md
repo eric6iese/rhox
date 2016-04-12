@@ -1,13 +1,14 @@
-# jscripttools
+# rhox
+Rhox - you faithful Rhinoceross Ox (or whatever).
 A Toolset of libraries designed for easy creation of java and nashorn shell and windows scripts
 
 
-## jjstk-classpath
+## rhox-classpath
 This module allows for the easy-on demand adding of entries to the current classloader (if it is an urlclassloader, that is).
 Loading of classes is featured in two styles:
 
 ```javascript
-var jclasspath = require("jjstk-jclasspath");
+var jclasspath = require("rhox-classpath");
 
 // -------- JAR-FILE/CLASS-FOLDER-LOADING ----
 
@@ -32,13 +33,13 @@ jclasspath.requireArtifact('junit:junit:4.10');
 WHY?
 jclasspath solves the problem that javascript tends to maintain its dependencies via a dependency-system on-the-fly, while in java (se) traditionally all dependencies have to be defined in the classpath. In order to overcome this restriction, this class performs a mild hack on the classloader which should work at least in all jjs-scripts.
 In general, resolving dependencies via maven should be the preferred way, as it prevents duplicates much easier, but the manual file-style might be more useful if you design your own java-script-node-style modules which include java-bindings.
-Besides being a tool for playing around, this is also the binding glue of all other jjstk-modules, which use both ways to include common maven libraries as well as their own module-internal jar-bindings.
+Besides being a tool for playing around, this is also the binding glue of all other rhox-modules, which use both ways to include common maven libraries as well as their own module-internal jar-bindings.
 
-## jjstk-combridge
+## rhox-combridge
 Use Windows COM-Objects as if they were native Javascript Objects
 
 ```javascript
-var combridge = require('jjstk-combridge');
+var combridge = require('rhox-combridge');
 var ComObject = combridge.ComObject;
 // Create a new ComObject binding for Word
 var word = new ComObject('Word.Application');
@@ -55,3 +56,13 @@ try {
     word.Quit();
 }
 ```
+
+## rhox-node (planned)
+First things first: No, this is NOT another avatar or nodyn!
+rhox-node will be a simple compatibility layer which emulates SOME node libraries with appropiate jdk functionality, like
+files, os path... The main target of this is to allow you to use native node libraries on nashorn, like for example shelljs.
+
+It is not clear if this will work as expected, but stay tuned.
+Major disclaimer: The biggest hurdle will be entering the eventloop, as the nashorn main-function isn't one by default.
+We will see how this turns out.
+Up to that point, only sync functions will be provided (enough for shelljs, but useless for most if not all others)
