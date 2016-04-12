@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.rhox</groupId>
-		<artifactId>jjstk-parent</artifactId>
+		<artifactId>rhox-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>jautoit-poet</artifactId>
@@ -15,7 +15,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.rhox</groupId>
-			<artifactId>jjstk-combridge</artifactId>
+			<artifactId>rhox-combridge</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>

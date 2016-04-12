@@ -107,7 +107,7 @@ var dependencyManager = null;
 var resolveArtifact = function (dependency) {
     if (dependencyManager === null) {
         // Load all jars of the distribution in a separate classloader to avoid version collisions.
-        var className = "com.jjstk.jclasspath.DependencyManager";
+        var className = "com.rhox.classpath.DependencyManager";
         var libDir = new File(__dirname, "lib");
         if (!libDir.isDirectory()) {
             throw new Error("Cannot find directory " + libDir + "!");

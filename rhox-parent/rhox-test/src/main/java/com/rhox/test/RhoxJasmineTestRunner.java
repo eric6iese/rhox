@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.jjstk.test;
+package com.rhox.test;
 
 import de.helwich.junit.JasmineDescriber;
 import de.helwich.junit.JasmineReporter;
@@ -27,8 +27,8 @@ import org.junit.runner.Runner;
 import org.junit.runner.notification.RunNotifier;
 
 /**
- * This class is a editied and modified copy of the JjstkJasmineTestRunner
- * from<br/>
+ * This class is a editied and modified copy of the JasmineTestRunner
+ from<br/>
  * https://github.com/hhelwich/junit-jasmine-runner/blob/master/src/main/java/de/helwich/junit/JasmineTestRunner.java
  * <br/>
  * I had to do this because I needed a functionality to always load my custom
@@ -36,16 +36,16 @@ import org.junit.runner.notification.RunNotifier;
  * This class will be removed as soon as I find a better (but still elegant) way
  * to do this.<br/>
  */
-public class JjstkJasmineTestRunner extends Runner {
+public class RhoxJasmineTestRunner extends Runner {
 
     /**
-     * All jjstk-tests will use the javascript-folder as the default test-folder
+     * All rhox-tests will use the javascript-folder as the default test-folder
      * (instead of js).
      */
     static final String TEST_DIR = "src/test/javascript";
 
     /**
-     * All jjstk-tests are expected to end with this suffix (before .js). This
+     * All rhox-tests are expected to end with this suffix (before .js). This
      * prevents manual naming of them.
      */
     static final Set<String> SUFFIXES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("Test.js", "Spec.js")));
@@ -55,7 +55,7 @@ public class JjstkJasmineTestRunner extends Runner {
     private final JasmineReporter reporter;
     private final Description description;
 
-    public JjstkJasmineTestRunner(Class<?> testClass) {
+    public RhoxJasmineTestRunner(Class<?> testClass) {
         try {
             this.testClass = testClass;
 

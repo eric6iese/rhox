@@ -1,10 +1,10 @@
-load(java.lang.System.getProperty('user.home') + '/jjstk/bootstrap.js');
+load(java.lang.System.getProperty('user.home') + '/rhox/bootstrap.js');
 
 var System = java.lang.System;
 System.out.println(System.getProperty("user.dir"));
 
 try {
-    var jclasspath = require("jjstk-jclasspath");
+    var jclasspath = require("rhox-classpath");
 } catch (e) {
     e.cause.printStackTrace();
 }
@@ -33,7 +33,7 @@ Throwables = Java.type("com.google.common.base.Throwables");
 System.out.println("Throwables ist nach dem manuellen Laden von guava verfügbar!");
 Assert.assertTrue(true);
 
-var jclassPathDir = java.nio.file.Paths.get(require.resolve('jjstk-jclasspath')).getParent();
+var jclassPathDir = java.nio.file.Paths.get(require.resolve('rhox-classpath')).getParent();
 System.out.println(jclassPathDir);
 
 jclasspath.requirePath(jclassPathDir, "lib/slf4j*.jar");

@@ -1,4 +1,4 @@
-package com.jjstk.combridge;
+package com.rhox.combridge;
 
 import com.sun.jna.WString;
 import static com.sun.jna.platform.win32.COM.COMBindingBaseObject.LOCALE_USER_DEFAULT;

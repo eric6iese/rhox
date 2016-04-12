@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.jjstk.jclasspath;
+package com.rhox.classpath;
 
 import java.io.File;
 import java.util.ArrayList;

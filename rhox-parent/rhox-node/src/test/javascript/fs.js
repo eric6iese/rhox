@@ -1,4 +1,4 @@
-var combridge = require('jjstk-shell');
+var combridge = require('rhox-shell');
 
 describe("shell", function () {
     it("does wonderful things", function () {

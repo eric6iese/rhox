@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.rhox</groupId>
-        <artifactId>jjstk-parent</artifactId>
+        <artifactId>rhox-parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>rhox-combridge</artifactId>

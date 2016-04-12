@@ -1,8 +1,8 @@
-load(java.lang.System.getProperty('user.home') + '/jjstk/bootstrap.js');
+load(java.lang.System.getProperty('user.home') + '/rhox/bootstrap.js');
 
 
 try {
-    var combridge = require('jjstk-combridge');
+    var combridge = require('rhox-combridge');
 } catch (e) {
     e.cause.printStackTrace();
 }

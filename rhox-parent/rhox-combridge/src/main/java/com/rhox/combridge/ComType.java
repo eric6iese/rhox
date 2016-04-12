@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.jjstk.combridge;
+package com.rhox.combridge;
 
 /**
  * The Type of a resolved displayid.

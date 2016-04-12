@@ -1,4 +1,4 @@
-package com.jjstk.jclasspath;
+package com.rhox.classpath;
 
 import java.io.IOException;
 import java.io.PrintWriter;

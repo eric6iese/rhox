@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.rhox</groupId>
-        <artifactId>jjstk-parent</artifactId>
+        <artifactId>rhox-parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>rhox-test</artifactId>
-    <description>Internal Project, provides the test-infrastructure with jasmine for the other jjstk-projects.
+    <description>Internal Project, provides the test-infrastructure with jasmine for the other rhox-projects.
         It uses a custom variant of the brilliant Jasmine-JUnit-Runner(https://github.com/hhelwich/junit-jasmine-runner)
         to make all tests fully compatible with maven AND the IDE's.
     </description>

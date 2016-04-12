@@ -1,4 +1,4 @@
-package com.jjstk.jclasspath;
+package com.rhox.classpath;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;

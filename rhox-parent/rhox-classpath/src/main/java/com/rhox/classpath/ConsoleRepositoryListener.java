@@ -1,4 +1,4 @@
-package com.jjstk.jclasspath;
+package com.rhox.classpath;
 
 import org.eclipse.aether.AbstractRepositoryListener;
 import org.eclipse.aether.RepositoryEvent;
