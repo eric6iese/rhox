@@ -1,8 +1,5 @@
 package com.rhox.classpath;
 
-import com.rhox.classpath.DependencyPrinter;
-import com.rhox.classpath.DependencyManager;
-import com.rhox.classpath.DependencyResolver;
 import java.util.Arrays;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;

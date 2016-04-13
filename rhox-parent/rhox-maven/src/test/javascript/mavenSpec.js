@@ -1,8 +1,5 @@
-var jclasspath = require("rhox-classpath");
+var maven = require("rhox-maven");
 
-/*
- * TODO: something new
- */
 describe("internal classpath", function () {
     it("cannot access by default", function () {
         var Throwables;
@@ -12,5 +9,10 @@ describe("internal classpath", function () {
         } catch (expected) {
             System.out.println("No access to guava - ok!");
         }
+
+        // ... but now i hsve!
+        maven.requireArtifact('com.google:guava:19.0');
+        Throwables = Java.type("com.google.common.base.Throwables");
     });
+
 });

@@ -108,9 +108,10 @@
         </plugins>
     </build>
     <modules>
-        <!-- <module>rhox-node</module> -->
         <module>rhox-classpath</module>
+        <module>rhox-maven</module>
         <module>rhox-combridge</module>
         <module>rhox-test</module>
+		<!-- <module>rhox-node</module> -->
     </modules>
 </project>

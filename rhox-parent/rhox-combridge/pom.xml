@@ -7,7 +7,7 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>rhox-combridge</artifactId>
-
+    <name>rhox-combridge</name>
     <dependencies>
         <dependency>
             <groupId>com.rhox</groupId>
@@ -17,8 +17,7 @@
         <dependency>
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna-platform</artifactId>
-            <version>4.2.1</version>
-            <scope>provided</scope>
+            <version>4.2.2</version>
         </dependency>
         <dependency>
             <groupId>com.rhox</groupId>
@@ -52,5 +51,4 @@
             </plugin>
         </plugins>
     </build>
-    <name>rhox-combridge</name>
 </project>

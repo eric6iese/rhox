@@ -1,0 +1,5 @@
+{
+    "name": "${project.artifactId}",
+    "version": "${project.version}",
+    "main": "maven.js"
+}
