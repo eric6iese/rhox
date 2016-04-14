@@ -1,4 +1,4 @@
-package com.rhox.classpath;
+package com.rhox.maven;
 
 import java.io.File;
 import java.util.List;

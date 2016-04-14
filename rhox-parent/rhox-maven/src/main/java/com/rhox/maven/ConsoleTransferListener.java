@@ -1,4 +1,4 @@
-package com.rhox.classpath;
+package com.rhox.maven;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;

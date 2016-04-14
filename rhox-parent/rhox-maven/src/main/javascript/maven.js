@@ -1,8 +1,8 @@
 var classpath = require('rhox-classpath');
 
 // Create the separate ClassLoader and finally load the class
-var module = new classpath.JavaModule(__dirname, '/lib/*.jar');
-var DependencyManager = module.type("com.rhox.classpath.DependencyManager");
+var javaModule = new classpath.JavaModule(__dirname + '/lib/*.jar');
+var DependencyManager = javaModule.type("com.rhox.maven.DependencyManager");
 var dependencyManager = new DependencyManager();
 
 var resolveArtifact = function (dependency) {
@@ -19,7 +19,10 @@ var resolveArtifact = function (dependency) {
  */
 var requireArtifact = function (dependency) {
     var artifacts = resolveArtifact(dependency);
-    requireAll(artifacts);
+    var paths = artifacts.map(function(it){
+        return it.file;
+    });
+    classpath.requirePath(paths);
 };
 
 exports.requireArtifact = requireArtifact;

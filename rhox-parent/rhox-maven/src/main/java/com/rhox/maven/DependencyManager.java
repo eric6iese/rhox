@@ -1,4 +1,4 @@
-package com.rhox.classpath;
+package com.rhox.maven;
 
 import java.io.IOException;
 import java.util.Arrays;

@@ -6,7 +6,7 @@ var Files = Java.type('java.nio.file.Files');
 var URL = Java.type('java.net.URL');
 var URLClassLoader = Java.type('java.net.URLClassLoader');
 var Thread = Java.type('java.lang.Thread');
-
+var ClassNotFoundException = Java.type('java.lang.ClassNotFoundException');
 
 /**
  * The dependency cache tracks all known dependency ids to prevent duplicate classloading
@@ -15,14 +15,30 @@ var Thread = Java.type('java.lang.Thread');
  */
 var dependencyCache = {};
 
+
 /**
- * Resolves the files of the given pattern.
+ * Resolves the files of the given path pattern.
+ * Before the glob check starts, all fragments will be split up to identify those
+ * segments where no matching is necessary.
  */
-var resolvePath = function (dirname, pattern) {
+var resolvePath = function (path) {
+    // normalize the path to the system dependent separator
+    path = path.replace(/\//g, File.separator);
+    var parts = path.split(File.separator);
+    var i = 0;
+    while (i < parts.length && parts[i].match(/[\*\?\[]/) === null) {
+        i++;
+    }
+    var dirname = parts.slice(0, i).join(File.separator);
+    var dir = Paths.get(dirname);
+    if (!Files.isDirectory(dir)) {
+        return [];
+    } else if (i === parts.length) {
+        return [dir];
+    }
+    var pattern = parts.slice(i).join(File.separator);
     var files = [];
-    var dir = Paths.get("" + dirname);
-    pattern = "glob:" + pattern;
-    var matcher = dir.getFileSystem().getPathMatcher(pattern);
+    var matcher = dir.getFileSystem().getPathMatcher("glob:" + pattern);
     var stream = Files.walk(dir);
     try {
         stream.forEach(function (path) {
@@ -30,7 +46,8 @@ var resolvePath = function (dirname, pattern) {
             if (!matcher.matches(p)) {
                 return;
             }
-            files.push(path.toAbsolutePath().toString());
+            p = path.toAbsolutePath().toString();
+            files.push(p);
         });
     } finally {
         stream.close();
@@ -89,34 +106,54 @@ var requireAll = function (files) {
  * A JavaModule is a separate unit which encapsulates the results of a given classloader or set of urls.
  * @param files the classpath array consisting of folder and jar file (strings)
  */
-var JavaModule = function (dirname, pattern, parentClassLoader) {
-    var files = resolvePath(dirname, pattern);
-    var libUrls = files.map(function (f) {
+var JavaModule = function (path, parentClassLoader) {
+    var files = resolvePath(path);
+    this.urls = files.map(function (f) {
         return new File(f).toURI().toURL();
     });
     if (parentClassLoader === undefined) {
-        this.classLoader = new URLClassLoader(libUrls);
+        this.classLoader = new URLClassLoader(this.urls);
     } else {
-        this.classLoader = new URLClassLoader(libUrls, parentClassLoader);
+        this.classLoader = new URLClassLoader(this.urls, parentClassLoader);
     }
 };
+JavaModule.prototype.toString = function () {
+    return "Module{" + this.urls + "}";
+};
+
 /**
  * Resolves the given class using the module's internal classloader.
  * Works pretty much the same as the java.type function, but for the module loader instead.
  */
 JavaModule.prototype.type = function (className) {
-    var clazz = Class.forName(className, true, this.classLoader);
-    return clazz.static;
+    try {
+        var clazz = Class.forName(className, true, this.classLoader);
+        return clazz.static;
+    } catch (ex) {
+        throw new ClassNotFoundException("Cannot find " + className + " in " + this.toString(), ex);
+    }
 };
 
 // Exports
 
 /**
  * Resolves the given argument as a jarfile to load in the local workspace.
+ * @param path one of the following
+ * <ol>
+ * <li>a String denoting a single real path or glob-expression</li>
+ * <li>an array of strings for multiple paths or glob-expresions</li>
+ * </ol>
  */
-var requirePath = function (dirname, pattern) {
-    // 1. Extract dir
-    var files = resolvePath(dirname, pattern);
+var requirePath = function (path) {
+    var files = [];
+    if (path.isArray && path.isArray()){
+        files = [];
+        path.forEach(function(it){
+           files = files.concat(resolvePath(it)); 
+        });
+    }else {
+        files = resolvePath(path);
+    }
     requireAll(files);
 };
 
@@ -124,3 +161,6 @@ requirePath.resolve = resolvePath;
 
 exports.JavaModule = JavaModule;
 exports.requirePath = requirePath;
+
+// testing
+exports._resolvePath = resolvePath;

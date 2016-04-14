@@ -1,4 +1,4 @@
-package com.rhox.classpath;
+package com.rhox.maven;
 
 import org.eclipse.aether.AbstractRepositoryListener;
 import org.eclipse.aether.RepositoryEvent;

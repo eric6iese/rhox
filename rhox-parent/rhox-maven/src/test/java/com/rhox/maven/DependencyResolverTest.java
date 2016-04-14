@@ -1,5 +1,8 @@
-package com.rhox.classpath;
+package com.rhox.maven;
 
+import com.rhox.maven.DependencyManager;
+import com.rhox.maven.DependencyPrinter;
+import com.rhox.maven.DependencyResolver;
 import java.util.Arrays;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
