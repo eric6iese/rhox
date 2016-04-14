@@ -7,6 +7,9 @@ var URL = Java.type('java.net.URL');
 var URLClassLoader = Java.type('java.net.URLClassLoader');
 var Thread = Java.type('java.lang.Thread');
 var ClassNotFoundException = Java.type('java.lang.ClassNotFoundException');
+var Logger = Java.type('java.util.logging.Logger');
+
+var log = Logger.getLogger('com.rhox.classpath');
 
 /**
  * The dependency cache tracks all known dependency ids to prevent duplicate classloading
@@ -26,17 +29,22 @@ var resolvePath = function (path) {
     path = path.replace(/\//g, File.separator);
     var parts = path.split(File.separator);
     var i = 0;
-    while (i < parts.length && parts[i].match(/[\*\?\[]/) === null) {
+    while (i < parts.length && !/[\*\?\[]/.test(parts[i])) {
         i++;
     }
     var dirname = parts.slice(0, i).join(File.separator);
     var dir = Paths.get(dirname);
-    if (!Files.isDirectory(dir)) {
-        return [];
-    } else if (i === parts.length) {
+    log.fine("Resolve-Basefile : " + dir);
+    if (i === parts.length) {
+        // no pattern found: must be a full path
         return [dir];
     }
     var pattern = parts.slice(i).join(File.separator);
+    log.fine("Resolve-Pattern : " + pattern);
+    if (!Files.isDirectory(dir)){
+        // Search returns nothing if the base of the pattern is not a dir
+        return [];
+    }
     var files = [];
     var matcher = dir.getFileSystem().getPathMatcher("glob:" + pattern);
     var stream = Files.walk(dir);
@@ -145,8 +153,9 @@ JavaModule.prototype.type = function (className) {
  * </ol>
  */
 var requirePath = function (path) {
-    var files = [];
-    if (path.isArray && path.isArray()){
+    var files;
+    if (Array.isArray(path)){
+        log.fine(path);
         files = [];
         path.forEach(function(it){
            files = files.concat(resolvePath(it)); 
@@ -154,6 +163,7 @@ var requirePath = function (path) {
     }else {
         files = resolvePath(path);
     }
+    log.fine("Resolved files: " + files);
     requireAll(files);
 };
 
@@ -161,6 +171,3 @@ requirePath.resolve = resolvePath;
 
 exports.JavaModule = JavaModule;
 exports.requirePath = requirePath;
-
-// testing
-exports._resolvePath = resolvePath;

@@ -21,7 +21,7 @@ describe("internal classpath", function () {
         var files = jclasspath._resolvePath("hello");
         expect(files.length).toEqual(0);
         
-        files = jclasspath._resolvePath("src");
+        files = jclasspath.requirePath.resolve("src");
         expect(files[0].toString()).toEqual("src");
     });
 });
