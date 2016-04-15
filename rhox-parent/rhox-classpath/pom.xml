@@ -27,7 +27,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <descriptors>
-                        <descriptor>../src/assembly/node_module.xml</descriptor>
+                        <descriptor>../src/assembly/node_simple_module.xml</descriptor>
                     </descriptors>
                     <appendAssemblyId>false</appendAssemblyId>
                     <attach>false</attach>
