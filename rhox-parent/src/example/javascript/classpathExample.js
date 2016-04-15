@@ -20,10 +20,17 @@ Logger.getLogger("org.apache.http").setLevel(Level.FINEST);
 // Logger.getLogger("com.rhox.classpath").setLevel(Level.SEVERE);
 
 var System = java.lang.System;
-System.out.println(System.getProperty("user.dir"));
+var out = System.out;
+out.println(System.getProperty("user.dir"));
 
 try {
     var classpath = require("rhox-classpath");
+    out.println("" + classpath);
+    for (var x in classpath){
+        out.println(x + "=" + classpath[x]);
+    }
+    var files = classpath.requirePath.resolve(mavenDir + "/lib/slf4j*.jar");
+    out.println("" + files);
     var maven = require("rhox-maven");
 } catch (e) {
     if (e.cause) {
@@ -41,30 +48,31 @@ var Assert = Java.type("org.junit.Assert");
 
 Assert.assertTrue(true);
 
-System.out.println("Assert works");
+out.println("Assert works");
 
 var Throwables;
 try {
     Throwables = Java.type("com.google.common.base.Throwables")
     Assert.fail("Cannot load internal classes of the dependency classloader!");
 } catch (expected) {
-    System.out.println("No access to guava - ok!");
+    out.println("No access to guava - ok!");
 }
 
 maven.requireArtifact('com.google.guava:guava:19.0');
 Throwables = Java.type("com.google.common.base.Throwables");
-System.out.println("Throwables ist nach dem manuellen Laden von guava verfügbar!");
+out.println("Throwables ist nach dem manuellen Laden von guava verfügbar!");
 Assert.assertTrue(true);
 
 var mavenDir = java.nio.file.Paths.get(require.resolve('rhox-maven')).getParent();
-System.out.println(mavenDir);
+out.println(mavenDir);
 
-classpath.requirePath(mavenDir + "/lib/slf4j*.jar");
-
-var files = classpath.requirePath.resolve(mavenDir + "/lib/slf4j*.jar");
-System.out.println("Dependencies:");
+var slf4jFile = mavenDir + "/lib/slf4j*.jar";
+out.println("Lade " + slf4jFile);
+classpath.requirePath(slf4jFile);
+var files = classpath.requirePath.resolve(slf4jFile);
+out.println("Dependencies: ");
 files.forEach(function (f) {
-    System.out.println(f);
+    out.println(f);
 });
 
 var log = org.slf4j.LoggerFactory.getLogger("hello");
