@@ -5,7 +5,7 @@ var javaModule = new classpath.JavaModule(__dirname + '/lib/*.jar');
 var DependencyManager = javaModule.type("com.rhox.maven.DependencyManager");
 var dependencyManager = new DependencyManager();
 
-var resolveArtifact = function (dependency) {
+var resolve = function (dependency) {
     var artifacts = [];
     var artifactMap = dependencyManager.resolve([dependency]);
     artifactMap.forEach(function (id, file) {
@@ -17,12 +17,13 @@ var resolveArtifact = function (dependency) {
 /**
  * Resolves the given argument as a dependency in the local workspace.
  */
-var requireArtifact = function (dependency) {
-    var artifacts = resolveArtifact(dependency);
+var include = function (dependency) {
+    var artifacts = resolve(dependency);
     var paths = artifacts.map(function(it){
         return it.file;
     });
-    classpath.requirePath(paths);
+    classpath.include(paths);
 };
 
-exports.requireArtifact = requireArtifact;
+exports.resolve = resolve;
+exports.include = include;

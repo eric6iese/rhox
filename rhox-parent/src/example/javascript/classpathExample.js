@@ -29,7 +29,7 @@ try {
     for (var x in classpath){
         out.println(x + "=" + classpath[x]);
     }
-    var files = classpath.requirePath.resolve(mavenDir + "/lib/slf4j*.jar");
+    var files = classpath.include.resolve(mavenDir + "/lib/slf4j*.jar");
     out.println("" + files);
     var maven = require("rhox-maven");
 } catch (e) {
@@ -39,10 +39,10 @@ try {
     throw e;
 }
 
-maven.requireArtifact('junit:junit:4.11');
+maven.include('junit:junit:4.11');
 
 // does not load again!
-maven.requireArtifact('junit:junit:4.11');
+maven.include('junit:junit:4.11');
 
 var Assert = Java.type("org.junit.Assert");
 
@@ -58,7 +58,7 @@ try {
     out.println("No access to guava - ok!");
 }
 
-maven.requireArtifact('com.google.guava:guava:19.0');
+maven.include('com.google.guava:guava:19.0');
 Throwables = Java.type("com.google.common.base.Throwables");
 out.println("Throwables ist nach dem manuellen Laden von guava verfügbar!");
 Assert.assertTrue(true);
@@ -68,8 +68,8 @@ out.println(mavenDir);
 
 var slf4jFile = mavenDir + "/lib/slf4j*.jar";
 out.println("Lade " + slf4jFile);
-classpath.requirePath(slf4jFile);
-var files = classpath.requirePath.resolve(slf4jFile);
+classpath.include(slf4jFile);
+var files = classpath.include.resolve(slf4jFile);
 out.println("Dependencies: ");
 files.forEach(function (f) {
     out.println(f);
@@ -78,3 +78,5 @@ files.forEach(function (f) {
 var log = org.slf4j.LoggerFactory.getLogger("hello");
 
 log.info("hello");
+
+out.println(1.03 - 0.42);

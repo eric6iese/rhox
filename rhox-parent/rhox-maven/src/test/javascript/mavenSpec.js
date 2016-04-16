@@ -11,7 +11,7 @@ describe("internal classpath", function () {
         }
 
         // ... but now i hsve!
-        maven.requireArtifact('com.google:guava:19.0');
+        maven.include('com.google:guava:19.0');
         Throwables = Java.type("com.google.common.base.Throwables");
     });
 

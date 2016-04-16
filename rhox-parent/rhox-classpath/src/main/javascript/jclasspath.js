@@ -6,9 +6,10 @@ var Files = Java.type('java.nio.file.Files');
 var URL = Java.type('java.net.URL');
 var URLClassLoader = Java.type('java.net.URLClassLoader');
 var Thread = Java.type('java.lang.Thread');
-var ClassNotFoundException = Java.type('java.lang.ClassNotFoundException');
-var Logger = Java.type('java.util.logging.Logger');
 
+var Logger = Java.type('java.util.logging.Logger');
+var Level = Java.type('java.util.logging.Level');
+var FINE = Level.FINE;
 var log = Logger.getLogger('com.rhox.classpath');
 
 /**
@@ -34,13 +35,13 @@ var resolvePath = function (path) {
     }
     var dirname = parts.slice(0, i).join(File.separator);
     var dir = Paths.get(dirname);
-    log.fine("Resolve-Basefile : " + dir);
+    log.log(FINE, "Resolve-Basefile: {0}", dir);
     if (i === parts.length) {
         // no pattern found: must be a full path
         return [dir];
     }
     var pattern = parts.slice(i).join(File.separator);
-    log.fine("Resolve-Pattern : " + pattern);
+    log.log(FINE, "Resolve-Pattern : {0}", pattern);
     if (!Files.isDirectory(dir)) {
         // Search returns nothing if the base of the pattern is not a dir
         return [];
@@ -90,11 +91,14 @@ JavaModule.prototype.toString = function () {
  * Works pretty much the same as the java.type function, but for the module loader instead.
  */
 JavaModule.prototype.type = function (className) {
+    var cl = this._classLoader;
+    log.log(Level.FINEST, "Resolve type {0}.", className);
     try {
         var clazz = Class.forName(className, true, this._classLoader);
         return clazz.static;
-    } catch (ex) {
-        throw new ClassNotFoundException("Cannot find " + className + " in " + this.toString(), ex);
+    } catch (e) {
+        log.log(FINE, "Resolving type {0} failed against: {1}", [className, Java.from(cl.getURLs())]);
+        throw e;
     }
 };
 
@@ -140,7 +144,7 @@ JavaModule.prototype.requireAll = function (files) {
             return;
         }
         // load the directory / jar
-        log.fine("Add URL to classloader " + cl + ": " + url);
+        log.log(FINE, "Add URL to classloader {0}: {1}", [cl, url]);
         methodAddUrl.invoke(cl, url);
     });
 };
@@ -154,18 +158,18 @@ JavaModule.prototype.requireAll = function (files) {
  * <li>an array of strings for multiple paths or glob-expresions</li>
  * </ol>
  */
-JavaModule.prototype.requirePath = function (path) {
+JavaModule.prototype.include = function (path) {
     var files = [];
     path = toArray(path);
-    log.fine("Requiring... " + path);
+    log.log(FINE, "Requiring... {0}", path);
     path.forEach(function (it) {
         files = files.concat(resolvePath(it));
     });
-    log.fine("Resolved files: " + files);
+    log.log(FINE, "Resolved files: {0}", files);
     this.requireAll(files);
 };
 
-JavaModule.prototype.requirePath.resolve = resolvePath;
+JavaModule.prototype.include.resolve = resolvePath;
 
 /**
  * These Modules can be instantiated manually by the RootLoader.
