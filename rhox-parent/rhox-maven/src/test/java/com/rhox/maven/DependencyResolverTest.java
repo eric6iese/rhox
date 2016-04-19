@@ -1,8 +1,5 @@
 package com.rhox.maven;
 
-import com.rhox.maven.DependencyManager;
-import com.rhox.maven.DependencyPrinter;
-import com.rhox.maven.DependencyResolver;
 import java.util.Arrays;
 import java.util.List;
 import org.eclipse.aether.artifact.Artifact;
@@ -22,10 +19,11 @@ public class DependencyResolverTest {
 
     DependencyResolver sut = new DependencyResolver();
     DependencyPrinter printer = new DependencyPrinter();
+    DependencyManager manager = new DependencyManager();
 
-    Artifact dep1 = DependencyManager.parse("org.springframework.data:spring-data-jpa:1.8.0.RELEASE");
-    Artifact dep2 = DependencyManager.parse("org.apache.tomcat.embed:tomcat-embed-jasper:8.0.30");
-    Artifact dep3 = DependencyManager.parse("org.springframework.data:spring-data-commons:1.8.0.RELEASE");
+    Artifact dep1 = DependencyManager.newArtifact("org.springframework.data", "spring-data-jpa", "1.8.0.RELEASE");
+    Artifact dep2 = DependencyManager.newArtifact("org.apache.tomcat.embed", "tomcat-embed-jasper", "8.0.30");
+    Artifact dep3 = DependencyManager.newArtifact("org.springframework.data", "spring-data-commons", "1.8.0.RELEASE");
     List<Artifact> deps = Arrays.asList(dep1, dep2, dep3);
 
     @Test

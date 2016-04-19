@@ -9,39 +9,47 @@ var Thread = Java.type('java.lang.Thread');
 
 var Logger = Java.type('java.util.logging.Logger');
 var Level = Java.type('java.util.logging.Level');
-var FINE = Level.FINE;
+var DEBUG = Level.FINE;
+var TRACE = Level.FINEST;
 var log = Logger.getLogger('com.rhox.classpath');
 
 /**
  * If the given function is an arraylike, then return it.
  * Otherwise wrap it in a single-element array.
  */
-var toArray = function (value) {
-    return Array.isArray(value) ? value : [value];
-}
+var toArray = function (args) {
+    var a = [];
+    for (var i = 0; i < args.length; i++) {
+        a.push(args[i]);
+    }
+    return a;
+};
+
+var fsPathSeparator = "" + File.pathSeparator;
+var fsSeparator = "" + File.separator;
 
 /**
  * Resolves the files of the given path pattern.
  * Before the glob check starts, all fragments will be split up to identify those
  * segments where no matching is necessary.
  */
-var resolvePath = function (path) {
-    // normalize the path to the system dependent separator
-    path = path.replace(/\//g, File.separator);
-    var parts = path.split(File.separator);
+var resolvePath = function (pathPattern) {
+    // normalize the path to the system dependent separator    
+    var path = pathPattern.replace(/\//g, fsSeparator);
+    var parts = path.split(fsSeparator);
     var i = 0;
     while (i < parts.length && !/[\*\?\[]/.test(parts[i])) {
         i++;
     }
-    var dirname = parts.slice(0, i).join(File.separator);
+    var dirname = parts.slice(0, i).join(fsSeparator);
     var dir = Paths.get(dirname);
-    log.log(FINE, "Resolve-Basefile: {0}", dir);
+    log.log(TRACE, 'Resolve-Basefile: "{0}"', dir);
     if (i === parts.length) {
         // no pattern found: must be a full path
         return [dir];
     }
-    var pattern = parts.slice(i).join(File.separator);
-    log.log(FINE, "Resolve-Pattern : {0}", pattern);
+    var pattern = parts.slice(i).join(fsSeparator);
+    log.log(TRACE, 'Resolve-Pattern : "{0}"', pattern);
     if (!Files.isDirectory(dir)) {
         // Search returns nothing if the base of the pattern is not a dir
         return [];
@@ -60,6 +68,9 @@ var resolvePath = function (path) {
         });
     } finally {
         stream.close();
+    }
+    if (log.isLoggable(DEBUG)) {
+        log.log(DEBUG, 'Pattern "' + path + '" resolved to ' + files.join(fsPathSeparator + " "));
     }
     return files;
 };
@@ -92,12 +103,12 @@ JavaModule.prototype.toString = function () {
  */
 JavaModule.prototype.type = function (className) {
     var cl = this._classLoader;
-    log.log(Level.FINEST, "Resolve type {0}.", className);
+    log.log(TRACE, "Resolve type {0}", className);
     try {
         var clazz = Class.forName(className, true, this._classLoader);
         return clazz.static;
     } catch (e) {
-        log.log(FINE, "Resolving type {0} failed against: {1}", [className, Java.from(cl.getURLs())]);
+        log.log(DEBUG, "Resolving type {0} failed against: {1}", [className, Java.from(cl.getURLs())]);
         throw e;
     }
 };
@@ -109,7 +120,7 @@ var methodAddUrl = null;
  * Loads associated resolved Dependencies into the classpath.
  * @param files an array of strings with the filenames
  */
-JavaModule.prototype.requireAll = function (files) {
+JavaModule.prototype.requireAll = function () {
     var cl = this._classLoader;
     if (methodAddUrl === null) {
         methodAddUrl = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
@@ -120,6 +131,7 @@ JavaModule.prototype.requireAll = function (files) {
     Java.from(cl.getURLs()).forEach(function (it) {
         urls[it.toString()] = true;
     });
+    var files = toArray(arguments);
     files.map(function (file) {
         // Check maven dependency cache if input is an artifact
         var id = file.artifact;
@@ -144,7 +156,7 @@ JavaModule.prototype.requireAll = function (files) {
             return;
         }
         // load the directory / jar
-        log.log(FINE, "Add URL to classloader {0}: {1}", [cl, url]);
+        log.log(DEBUG, "Add URL to classloader {0}: {1}", [cl, url]);
         methodAddUrl.invoke(cl, url);
     });
 };
@@ -158,15 +170,15 @@ JavaModule.prototype.requireAll = function (files) {
  * <li>an array of strings for multiple paths or glob-expresions</li>
  * </ol>
  */
-JavaModule.prototype.include = function (path) {
+JavaModule.prototype.include = function () {
+    var path = toArray(arguments);
+    log.log(TRACE, "Requiring... {0}", path);
     var files = [];
-    path = toArray(path);
-    log.log(FINE, "Requiring... {0}", path);
     path.forEach(function (it) {
         files = files.concat(resolvePath(it));
     });
-    log.log(FINE, "Resolved files: {0}", files);
-    this.requireAll(files);
+    log.log(TRACE, "Resolved files: {0}", files);
+    this.requireAll.apply(this, files);
 };
 
 JavaModule.prototype.include.resolve = resolvePath;

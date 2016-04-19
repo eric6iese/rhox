@@ -5,16 +5,16 @@ var Logger = Java.type('java.util.logging.Logger');
 var Level = Java.type('java.util.logging.Level');
 // Set the root logger with its handlers
 var rootLogger = Logger.getLogger("");
-rootLogger.setLevel(Level.ALL);
+rootLogger.setLevel(Level.INFO);
 Java.from(rootLogger.getHandlers()).forEach(function (h) {
     h.setLevel(Level.ALL);
 });
-Logger.getLogger("com.rhox.classpath").setLevel(Level.ALL);
+Logger.getLogger("com.rhox").setLevel(Level.FINE);
 
 // Enable http wire logging by setting its logger to info!
 // does not work? i dont get anything out?
-Logger.getLogger("org.apache.http.wire").setLevel(Level.FINEST);
-Logger.getLogger("org.apache.http").setLevel(Level.FINEST);
+// Logger.getLogger("org.apache.http.wire").setLevel(Level.FINEST);
+// Logger.getLogger("org.apache.http").setLevel(Level.FINEST);
 
 // disable rhox logging for fun
 // Logger.getLogger("com.rhox.classpath").setLevel(Level.SEVERE);
@@ -26,7 +26,7 @@ out.println(System.getProperty("user.dir"));
 try {
     var classpath = require("rhox-classpath");
     out.println("" + classpath);
-    for (var x in classpath){
+    for (var x in classpath) {
         out.println(x + "=" + classpath[x]);
     }
     var files = classpath.include.resolve(mavenDir + "/lib/slf4j*.jar");
@@ -39,9 +39,13 @@ try {
     throw e;
 }
 
-maven.include('junit:junit:4.11');
+out.println("Now load junit");
+maven.include({group: 'junit', name: 'junit', version: '4.11'});
 
-// does not load again!
+out.println("Does not load again!");
+maven.include({group: 'junit', name: 'junit', version: '4.11'});
+
+out.println("not even like this");
 maven.include('junit:junit:4.11');
 
 var Assert = Java.type("org.junit.Assert");
@@ -75,8 +79,12 @@ files.forEach(function (f) {
     out.println(f);
 });
 
+out.println("--- TEST RESOLVING MULTIPLE DEPENDENCIES AT ONCE!");
+maven.include('com.google.guava:guava:19.0',
+        'junit:junit:4.11',
+        {group: 'junit', name: 'junit', version: '4.11'},
+        {group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.8.0.RELEASE'});
+
 var log = org.slf4j.LoggerFactory.getLogger("hello");
 
-log.info("hello");
-
-out.println(1.03 - 0.42);
+log.info("WELL DONE!");
