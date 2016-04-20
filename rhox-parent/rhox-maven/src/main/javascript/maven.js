@@ -99,5 +99,9 @@ var include = function (varargs) {
     classpath.include.apply(classpath, paths);
 };
 
+exports.toString = function () {
+    return "MavenModule{}";
+};
+
 exports.resolve = resolve;
 exports.include = include;

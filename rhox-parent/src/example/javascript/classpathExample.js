@@ -1,6 +1,5 @@
 load(java.lang.System.getProperty('user.home') + '/rhox/bootstrap.js');
 
-
 var Logger = Java.type('java.util.logging.Logger');
 var Level = Java.type('java.util.logging.Level');
 // Set the root logger with its handlers
@@ -22,6 +21,7 @@ Logger.getLogger("com.rhox").setLevel(Level.FINE);
 var System = java.lang.System;
 var out = System.out;
 out.println("Hello and welcome in " + System.getProperty("user.dir"));
+
 
 try {
     var classpath = require("rhox-classpath");
