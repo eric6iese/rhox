@@ -1,28 +1,19 @@
 var classpath = require('rhox-classpath');
 
 // Create the separate ClassLoader and finally load the class
-var javaModule = new classpath.JavaModule(__dirname + '/lib/*.jar');
+var mavenModule = classpath.createModule();
+mavenModule.include(__dirname + '/lib/*.jar');
 
 var CharSequence = Java.type('java.lang.CharSequence');
-var DependencyManager = javaModule.type("com.rhox.maven.DependencyManager");
-var LoggerFactory = javaModule.type('org.slf4j.LoggerFactory');
+var DependencyManager = mavenModule.type("com.rhox.maven.DependencyManager");
+var LoggerFactory = mavenModule.type('org.slf4j.LoggerFactory');
 
 var log = LoggerFactory.getLogger('com.rhox.maven');
 var dependencyManager = new DependencyManager();
 
-/** Converts function arguments to an array. */
-var toArray = function (args) {
-    var a = [];
-    for (var i = 0; i < args.length; i++) {
-        a.push(args[i]);
-    }
-    return a;
-};
-
 var asNull = function (value) {
     return value === undefined ? null : value;
 };
-
 
 /**
  * Takes an input object an either destructures it or parses it and
@@ -77,15 +68,20 @@ var fromAetherArtifact = function (artifact) {
 // internally for all parsing in javascript (or mirrors of the java-objects)
 // resolve then returns these + file attribute like below
 
-var resolve = function () {
-    var dependencies = toArray(arguments);
-    var artifacts = dependencies.map(toAetherArtifact);
-    if (log.isTraceEnabled()) {
-        log.trace('Resolving "' + artifacts.join('", "') + '"');
+/**
+ * @param .... the dependencies to resolve as varargs
+ */
+var resolve = function (varargs) {
+    var artifacts = new Array(arguments.length);
+    for (var i = 0; i < arguments.length; i++) {
+        artifacts[i] = toAetherArtifact(arguments[i]);
+    }
+    if (log.isDebugEnabled()) {
+        log.debug('Resolving "' + artifacts.join('", "') + '"');
     }
     artifacts = Java.from(dependencyManager.resolve(artifacts));
-    if (log.isTraceEnabled()) {
-        log.trace('Result: "' + artifacts.join('", "') + '"');
+    if (log.isDebugEnabled()) {
+        log.debug('Resolved: "' + artifacts.join('", "') + '"');
     }
     artifacts = artifacts.map(fromAetherArtifact);
     return artifacts;
@@ -93,14 +89,14 @@ var resolve = function () {
 
 /**
  * Resolves the given argument as a dependency in the local workspace.
+ * @param .... the dependencies to resolve as varargs
  */
-var include = function () {
-    var dependencies = toArray(arguments);
-    var artifacts = resolve.apply(null, dependencies);
+var include = function (varargs) {
+    var artifacts = resolve.apply(null, arguments);
     var paths = artifacts.map(function (it) {
         return it.file;
-    });    
-    classpath.include.apply(null, paths);
+    });
+    classpath.include.apply(classpath, paths);
 };
 
 exports.resolve = resolve;

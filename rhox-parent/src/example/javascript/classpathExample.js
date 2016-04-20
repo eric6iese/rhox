@@ -21,16 +21,11 @@ Logger.getLogger("com.rhox").setLevel(Level.FINE);
 
 var System = java.lang.System;
 var out = System.out;
-out.println(System.getProperty("user.dir"));
+out.println("Hello and welcome in " + System.getProperty("user.dir"));
 
 try {
     var classpath = require("rhox-classpath");
-    out.println("" + classpath);
-    for (var x in classpath) {
-        out.println(x + "=" + classpath[x]);
-    }
     var files = classpath.include.resolve(mavenDir + "/lib/slf4j*.jar");
-    out.println("" + files);
     var maven = require("rhox-maven");
 } catch (e) {
     if (e.cause) {

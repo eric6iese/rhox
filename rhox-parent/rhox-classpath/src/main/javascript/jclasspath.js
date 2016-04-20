@@ -13,20 +13,9 @@ var DEBUG = Level.FINE;
 var TRACE = Level.FINEST;
 var log = Logger.getLogger('com.rhox.classpath');
 
-/**
- * If the given function is an arraylike, then return it.
- * Otherwise wrap it in a single-element array.
- */
-var toArray = function (args) {
-    var a = [];
-    for (var i = 0; i < args.length; i++) {
-        a.push(args[i]);
-    }
-    return a;
-};
-
-var fsPathSeparator = "" + File.pathSeparator;
-var fsSeparator = "" + File.separator;
+// FileSystem Constants
+var fsPathSeparator = File.pathSeparator;
+var fsSeparator = File.separator;
 
 /**
  * Resolves the files of the given path pattern.
@@ -70,7 +59,7 @@ var resolvePath = function (pathPattern) {
         stream.close();
     }
     if (log.isLoggable(DEBUG)) {
-        log.log(DEBUG, 'Pattern "' + path + '" resolved to ' + files.join(fsPathSeparator + " "));
+        log.log(DEBUG, 'Pattern "' + pathPattern + '" resolved to ' + files.join(fsPathSeparator));
     }
     return files;
 };
@@ -80,12 +69,6 @@ var resolvePath = function (pathPattern) {
  * @param files the classpath array consisting of folder and jar file (strings)
  */
 var JavaModule = function () {
-    /**
-     * The dependency cache tracks all known dependency ids to prevent duplicate classloading
-     * In the same way, the classloaders each check individually which urls have already been loaded, to
-     * prevent them from being loaded again later on.
-     */
-    this.dependencyCache = {};
     this._classLoader = null;
 };
 
@@ -105,7 +88,7 @@ JavaModule.prototype.type = function (className) {
     var cl = this._classLoader;
     log.log(TRACE, "Resolve type {0}", className);
     try {
-        var clazz = Class.forName(className, true, this._classLoader);
+        var clazz = Class.forName(className, true, cl);
         return clazz.static;
     } catch (e) {
         log.log(DEBUG, "Resolving type {0} failed against: {1}", [className, Java.from(cl.getURLs())]);
@@ -113,40 +96,24 @@ JavaModule.prototype.type = function (className) {
     }
 };
 
-/** Reflect-Hook for the add-url method. */
-var methodAddUrl = null;
+/** Reflection-Hook for the add-url method. */
+var methodAddUrl = methodAddUrl = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+methodAddUrl.setAccessible(true);
 
 /**
  * Loads associated resolved Dependencies into the classpath.
- * @param files an array of strings with the filenames
+ * @param classLoader must be an urlclassloader which will load the given files
+ * @param files to resolve as varargs
  */
-JavaModule.prototype.requireAll = function () {
-    var cl = this._classLoader;
-    if (methodAddUrl === null) {
-        methodAddUrl = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-        methodAddUrl.setAccessible(true);
-    }
-
+var requireFiles = function (classLoader, files) {
     var urls = {};
-    Java.from(cl.getURLs()).forEach(function (it) {
+    Java.from(classLoader.getURLs()).forEach(function (it) {
         urls[it.toString()] = true;
     });
-    var files = toArray(arguments);
-    files.map(function (file) {
-        // Check maven dependency cache if input is an artifact
-        var id = file.artifact;
-        if (id === undefined) {
-            // not a maven dependency, go on
-            return file;
-        }
-        if (this.dependencyCache[id]) {
-            // skip: Dependency has already been loaded
-            return null;
-        }
-        // add depency to cache and continue with the file part only
-        this.dependencyCache[id] = true;
-        return file.file;
-    }).forEach(function (file) {
+
+    // iterate over the urls and add them to the classpath,
+    // if they are not already part of the urls map
+    files.forEach(function (file) {
         if (file === null) {
             return;
         }
@@ -156,8 +123,8 @@ JavaModule.prototype.requireAll = function () {
             return;
         }
         // load the directory / jar
-        log.log(DEBUG, "Add URL to classloader {0}: {1}", [cl, url]);
-        methodAddUrl.invoke(cl, url);
+        log.log(DEBUG, "Add URL to classloader {0}: {1}", [classLoader, url]);
+        methodAddUrl.invoke(classLoader, url);
     });
 };
 
@@ -171,29 +138,20 @@ JavaModule.prototype.requireAll = function () {
  * </ol>
  */
 JavaModule.prototype.include = function () {
-    var path = toArray(arguments);
-    log.log(TRACE, "Requiring... {0}", path);
+    var paths = [];
+    for (var i = 0; i < arguments.length; i++) {
+        paths[i] = arguments[i];
+    }
+    log.log(TRACE, "Requiring... {0}", paths.join(fsPathSeparator));
     var files = [];
-    path.forEach(function (it) {
+    paths.forEach(function (it) {
         files = files.concat(resolvePath(it));
     });
-    log.log(TRACE, "Resolved files: {0}", files);
-    this.requireAll.apply(this, files);
+    log.log(TRACE, "Resolved files: {0}", files.join(fsPathSeparator));
+    requireFiles(this._classLoader, files);
 };
 
 JavaModule.prototype.include.resolve = resolvePath;
-
-/**
- * These Modules can be instantiated manually by the RootLoader.
- */
-var ChildModule = function (path, parentClassLoader) {
-    var files = resolvePath(path);
-    var urls = files.map(function (f) {
-        return new File(f).toURI().toURL();
-    });
-    this._classLoader = parentClassLoader ? new URLClassLoader(urls, parentClassLoader) : new URLClassLoader(urls);
-};
-ChildModule.prototype = new JavaModule();
 
 /**
  * Inspired by groovy, this 'hacks' into java's default url classloader to do some
@@ -206,6 +164,24 @@ var RootModule = function () {
     // some more code could be added which searches a matching url loader in the parent-classloaders
 };
 RootModule.prototype = new JavaModule();
-RootModule.prototype.JavaModule = ChildModule;
+
+// var emptyUrlArray = new Java.type('java.net.URL[]')(0);
+/**
+ * These Modules can be instantiated manually by the RootLoader.
+ */
+var ChildModule = function (parentClassLoader) {
+    this._classLoader = parentClassLoader ? new URLClassLoader([], parentClassLoader) : new URLClassLoader([]);
+};
+ChildModule.prototype = new JavaModule();
+
+/**
+ * Creates a new Module as a submodule of the current one.
+ * The ChildModule uses the classloader of its parent but defines its own scope,
+ * so that all of its includes are not visible to it.<br/>
+ * Technically this is of course just the default for all of java classloading when defining a subclassloader.
+ */
+JavaModule.prototype.createModule = function () {
+    return new ChildModule(this._classLoader);
+};
 
 module.exports = new RootModule();
