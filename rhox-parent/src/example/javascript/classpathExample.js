@@ -1,4 +1,4 @@
-load(java.lang.System.getProperty('user.home') + '/rhox/bootstrap.js');
+load(java.lang.System.getenv('NASHORN_GLOBALS'));
 
 var Logger = Java.type('java.util.logging.Logger');
 var Level = Java.type('java.util.logging.Level');

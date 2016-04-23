@@ -1,4 +1,4 @@
-load(java.lang.System.getProperty('user.home') + '/rhox/bootstrap.js');
+load(java.lang.System.getenv('NASHORN_GLOBALS'));
 
 var classpath = require("rhox-classpath");
 var maven = require("rhox-maven");

@@ -1,5 +1,4 @@
-load(java.lang.System.getProperty('user.home') + '/rhox/bootstrap.js');
-
+load(java.lang.System.getenv('NASHORN_GLOBALS'));
 
 try {
     var combridge = require('rhox-combridge');

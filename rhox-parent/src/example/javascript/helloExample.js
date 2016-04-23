@@ -1,4 +1,4 @@
-load(java.lang.System.getProperty('user.home') + '/rhox/bootstrap.js');
+load(java.lang.System.getenv('NASHORN_GLOBALS'));
 
 var combridge = require('rhox-combridge');
 var ComObject = combridge.ComObject;
@@ -38,7 +38,7 @@ Runtime.getRuntime().exec("cmd /c notepad");
 au.WinActivate(notepad);
 au.WinWaitActive(notepad);
 au.Send(testString);
-
+java.lang.Thread.sleep(2000);
 assertWinExists(1);
 
 au.WinClose(notepad, testString);
