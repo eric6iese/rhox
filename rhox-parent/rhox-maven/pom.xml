@@ -4,17 +4,17 @@
     <parent>
         <groupId>com.rhox</groupId>
         <artifactId>rhox-parent</artifactId>
-        <version>0.1</version>
+        <version>0.1.0</version>
     </parent>
     <artifactId>rhox-maven</artifactId>
     <name>rhox-maven</name>
-    <description>an extension of the classpath library, this allows it to
-        fetch dependencies directly with the maven-configuration of the system, either
-        from the local repository or via a direct download as defined in the maven-settings
-        of the user</description>
+    <description>fetches dependencies with maven and adds them to the classpath</description>
+    
     <properties>
         <aether.version>1.1.0</aether.version>
         <maven.version>3.3.9</maven.version>
+        
+        <assembly.dir>../node_modules</assembly.dir>
     </properties>
 
     <dependencies>
@@ -80,7 +80,7 @@
     </dependencies>
 
     <build>
-        <plugins>
+        <plugins>            
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
@@ -90,7 +90,7 @@
                     <appendAssemblyId>false</appendAssemblyId>
                     <attach>false</attach>
                     <finalName>${project.artifactId}</finalName>
-                    <outputDirectory>../node_modules</outputDirectory>
+                    <outputDirectory>${assembly.dir}</outputDirectory>
                 </configuration>
                 <executions>
                     <execution>
@@ -98,6 +98,26 @@
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>install</phase>
+                        <configuration>
+                            <target>
+                                <tar destfile="${assembly.dir}/${project.artifactId}.tar.gz" compression="gzip" >
+                                    <tarfileset dir="${assembly.dir}">
+                                        <include name="${project.artifactId}/**"/>
+                                    </tarfileset>
+                                </tar>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
                         </goals>
                     </execution>
                 </executions>
