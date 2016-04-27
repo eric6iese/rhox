@@ -10,10 +10,6 @@
     <name>rhox-combridge</name>
     <description>acess native libraries as javascript objects</description>
     
-    <properties>
-        <assembly.dir>../node_modules</assembly.dir>
-    </properties>
-    
     <dependencies>
         <dependency>
             <groupId>com.rhox</groupId>
@@ -43,7 +39,7 @@
                     <appendAssemblyId>false</appendAssemblyId>
                     <attach>false</attach>
                     <finalName>${project.artifactId}</finalName>
-                    <outputDirectory>${assembly.dir}</outputDirectory>
+                    <outputDirectory>../node_modules</outputDirectory>
                 </configuration>
                 <executions>
                     <execution>
@@ -59,14 +55,11 @@
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
-                        <phase>install</phase>
+                        <phase>package</phase>
                         <configuration>
                             <target>
-                                <tar destfile="${assembly.dir}/${project.artifactId}.tar.gz" compression="gzip" >
-                                    <tarfileset dir="${assembly.dir}">
-                                        <include name="${project.artifactId}/**"/>
-                                    </tarfileset>
-                                </tar>
+                                <property name="maven.project.artifactId" value="${project.artifactId}"/>
+                                <ant antfile="../src/assembly/build.xml"/>                            
                             </target>
                         </configuration>
                         <goals>

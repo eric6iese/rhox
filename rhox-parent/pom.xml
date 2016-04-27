@@ -7,9 +7,17 @@
     <packaging>pom</packaging>
     <name>rhox-parent</name>
     <description>Collection of autoit script bindings for java and nashorn</description>
-
-    <properties>
+    <url>https://github.com/eric6iese/rhox</url>
+    <properties>        
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        
+        <!-- Author-Properties for npm -->
+        <author.name>Eric Giese</author.name>
+        <author.email>eric6iese@googlemail.com</author.email>
+        <author.homepage>https://github.com/eric6iese</author.homepage>
+        
+        <project.license>Apache-2.0</project.license>
+        
     </properties>
 
     <dependencyManagement>

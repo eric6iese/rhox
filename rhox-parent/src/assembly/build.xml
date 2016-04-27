@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="rhox-packager" default="dist" basedir=".">
+    
+    <!-- Required property: maven.project.artifactId -->
+    
+    <dirname property="antfile.dir" file="${ant.file}"/>
+    <property name="parent.dir" value="${antfile.dir}/../.."/>
+    <property name="assembly.dir" value="${parent.dir}/node_modules"/>
+    <property name="out.dir" value="${parent.dir}/target"/>
+
+    <target name="dist" description="Creates the release packages from the assemblies">
+        <echo message="Creating packages from ${assembly.dir} in ${out.dir}"/>
+        <tar destfile="${out.dir}/${maven.project.artifactId}.tar.gz" compression="gzip" >
+            <tarfileset dir="${assembly.dir}">
+                <include name="${maven.project.artifactId}/**"/>
+            </tarfileset>
+        </tar>
+        <zip destfile="${out.dir}/${maven.project.artifactId}.zip">
+            <zipfileset dir="${assembly.dir}">
+                <include name="${maven.project.artifactId}/**"/>
+            </zipfileset>
+        </zip>
+    </target>
+    
+</project>
