@@ -1,12 +1,12 @@
 load(java.lang.System.getenv('NASHORN_GLOBALS'));
 
 try {
-    var combridge = require('rhox-combridge');
+    var native = require('rhox-native');
 } catch (e) {
     e.cause.printStackTrace();
 }
 
-var ComObject = combridge.ComObject;
+var ComObject = native.ComObject;
 
 
 var System = Java.type('java.lang.System')

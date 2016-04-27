@@ -6,8 +6,8 @@
         <artifactId>rhox-parent</artifactId>
         <version>0.1.0</version>
     </parent>
-    <artifactId>rhox-combridge</artifactId>
-    <name>rhox-combridge</name>
+    <artifactId>rhox-native</artifactId>
+    <name>rhox-native</name>
     <description>acess native libraries as javascript objects</description>
     
     <dependencies>

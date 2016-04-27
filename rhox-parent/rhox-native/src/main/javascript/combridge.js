@@ -5,7 +5,7 @@ comModule.include(__dirname + '/lib/*.jar');
 
 
 exports.toString = function () {
-    return "Combridge{}";
+    return "Native{}";
 };
 exports.ComObject = comModule.type('com.rhox.combridge.ComObject');
 exports.ComDispatch = comModule.type('com.rhox.combridge.ComDispatch');

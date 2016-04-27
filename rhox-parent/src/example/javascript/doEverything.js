@@ -11,8 +11,8 @@ System.out.println(list);
 
 
 
-var combridge = require('rhox-combridge');
-var ComObject = combridge.ComObject;
+var native = require('rhox-native');
+var ComObject = native.ComObject;
 var au = new ComObject("AutoItX3.Control");
 
 

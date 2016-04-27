@@ -2,7 +2,7 @@ load(java.lang.System.getenv('NASHORN_GLOBALS'));
 
 var classpath = require("rhox-classpath");
 var maven = require("rhox-maven");
-var combridge = require("rhox-combridge");
+var native = require("rhox-native");
 
 
 var out = Java.type('java.lang.System').out;
@@ -15,4 +15,4 @@ function printType(type) {
     out.println();
 }
 
-[classpath, maven, combridge].forEach(printType);
+[classpath, maven, native].forEach(printType);
