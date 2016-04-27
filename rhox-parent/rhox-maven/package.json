@@ -9,5 +9,8 @@
         "email": "${author.homepage}"
     },
     "license": "${project.license}",
-    "main": "maven.js"
+    "main": "maven.js",
+    "dependencies": {
+        "rhox-classpath": "https://github.com/eric6iese/rhox/releases/download/${project.version}/rhox-classpath.tar.gz"
+    }
 }
