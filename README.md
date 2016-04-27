@@ -35,12 +35,12 @@ jclasspath solves the problem that javascript tends to maintain its dependencies
 In general, resolving dependencies via maven should be the preferred way, as it prevents duplicates much easier, but the manual file-style might be more useful if you design your own java-script-node-style modules which include java-bindings.
 Besides being a tool for playing around, this is also the binding glue of all other rhox-modules, which use both ways to include common maven libraries as well as their own module-internal jar-bindings.
 
-## rhox-combridge
+## rhox-native
 Use Windows COM-Objects as if they were native Javascript Objects
 
 ```javascript
-var combridge = require('rhox-combridge');
-var ComObject = combridge.ComObject;
+var native = require('rhox-native');
+var ComObject = native.ComObject;
 // Create a new ComObject binding for Word
 var word = new ComObject('Word.Application');
 try {
@@ -56,6 +56,24 @@ try {
     word.Quit();
 }
 ```
+
+# Installation
+
+The easiest way to install rhox is via npm:
+
+npm install https://github.com/eric6iese/rhox/releases/download/0.1/rhox-classpath.tar.gz
+npm install https://github.com/eric6iese/rhox/releases/download/0.1/rhox-maven.tar.gz
+npm install https://github.com/eric6iese/rhox/releases/download/0.1/rhox-native.tar.gz
+
+This will install each rhox-module in the parent directory in a folder called node_modules.
+See https://docs.npmjs.com/getting-started/installing-npm-packages-locally
+
+Alternatively, you can install rhox globally if you do not want to use a common parent folder.
+See https://docs.npmjs.com/getting-started/installing-npm-packages-globally
+
+You also need a nashorn implementation of the require-function, see also in bootstrapping.
+
+That's it!
 
 # Bootstrapping
 One of the biggest issues to solve with scripting additions like rhox and the like might be the bootstrapping of the module loader. This might be changed if java 9 is completely ES6 compatible, but up to this point we need a workable and simple solution which can be used in ALL scripts in the same way. That requires two steps:
