@@ -55,6 +55,4 @@ try {
 }
 ```
 
-# Installation
-
-See [here](/eric6iese/rhox/wiki/Installation)
+[More...](https://github.com/eric6iese/rhox/wiki)
