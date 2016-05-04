@@ -1,7 +1,9 @@
 try {
-    var combridge = require('rhox-combridge');
+    var combridge = require('rhox-native');
 } catch (e) {
-    e.cause.printStacktrace();
+    if (e.cause){
+      e.cause.printStacktrace();     
+    }
     throw e;
 }
 describe("comboject", function () {
