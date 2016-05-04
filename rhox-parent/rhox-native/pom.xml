@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.rhox</groupId>
         <artifactId>rhox-parent</artifactId>
-        <version>0.1.0</version>
+        <version>0.1.1</version>
     </parent>
     <artifactId>rhox-native</artifactId>
     <name>rhox-native</name>
