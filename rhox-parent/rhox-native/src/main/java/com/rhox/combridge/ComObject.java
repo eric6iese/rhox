@@ -9,7 +9,11 @@ import com.sun.jna.platform.win32.COM.COMException;
 import com.sun.jna.platform.win32.OaIdl.DISPID;
 import com.sun.jna.platform.win32.Variant;
 import com.sun.jna.platform.win32.Variant.VARIANT;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import jdk.nashorn.api.scripting.AbstractJSObject;
 
@@ -21,14 +25,19 @@ import jdk.nashorn.api.scripting.AbstractJSObject;
 @SuppressWarnings("restriction")
 public class ComObject extends AbstractJSObject {
 
-    private final String desc;
+    private final ComObject parent;
+    /**
+     * Name of this Element.
+     */
+    private final String name;
+
     final Dispatcher dispatcher;
+
     /**
      * 'Remembers' internally which elements are used as properties and which
      * are methods.
      */
     private final Map<String, ComType> fieldTypes;
-    private final String method;
 
     /**
      * Creates a new JsComObject for the given com name.
@@ -36,21 +45,21 @@ public class ComObject extends AbstractJSObject {
      * @param name the com name
      */
     public ComObject(String name) {
-        this(name, new Dispatcher(name));
+        this(null, name, new Dispatcher(name));
     }
 
     /**
      * Internal helper constructor.
      */
-    private ComObject(String desc, Dispatcher dispatcher) {
-        this(desc, dispatcher, new HashMap<>(), null);
+    private ComObject(ComObject parent, String name, Dispatcher dispatcher) {
+        this(parent, name, dispatcher, new HashMap<>());
     }
 
-    private ComObject(String desc, Dispatcher dispatcher, Map<String, ComType> fieldTypes, String method) {
-        this.desc = desc;
+    private ComObject(ComObject parent, String name, Dispatcher dispatcher, Map<String, ComType> fieldTypes) {
+        this.parent = parent;
+        this.name = name;
         this.dispatcher = dispatcher;
         this.fieldTypes = fieldTypes;
-        this.method = method;
     }
 
     /**
@@ -92,7 +101,7 @@ public class ComObject extends AbstractJSObject {
      * Creates a subinstance specially designed for invocations.
      */
     private ComObject methodNode(String name) {
-        return new ComObject(desc + '.' + name, dispatcher, fieldTypes, name);
+        return new ComObject(this, name, null, fieldTypes);
     }
 
     /**
@@ -126,35 +135,54 @@ public class ComObject extends AbstractJSObject {
      * @return the result of the invocation
      */
     public Object invoke(Object... args) {
-        DISPID id = getId(method);
+        if (parent == null) {
+            throw new IllegalStateException("Cannot invoke " + name + "(" + Arrays.toString(args) + ") on the Root COM element!");
+        }
+        // todo hier muss ich evtl felder gegen das parent auflösen können...
+        DISPID id = parent.getId(name);
         VARIANT[] vArgs = Variants.toArray(args);
-        requireType(method, ComType.METHOD);
+        // Wenn kein Dispatcher vorhanden ist, dann ist dies ein Method-Call
+        boolean method = dispatcher == null;
         Variant.VARIANT v;
         try {
-            v = dispatcher.call(id, vArgs);
+            v = parent.dispatcher.call(method, id, vArgs);
         } catch (COMException e) {
             throw newException(e);
         }
-        Object result = toResult(desc + "()", v);
-        setType(method, ComType.METHOD);
+        Object result = toResult(name + "()", v);
+        setType(name, ComType.METHOD);
         return result;
+    }
+
+    /**
+     * Liefert den voll qualifizierten Pfad des Comobjects zurück.
+     */
+    private String getDesc() {
+        List<String> path = new ArrayList<>();
+        ComObject n = this;
+        while (n != null) {
+            path.add(n.name);
+            n = n.parent;
+        }
+        Collections.reverse(path);
+        return String.join(".", path);
     }
 
     @Override
     public String toString() {
-        return "ComNode(" + desc + ")";
+        return "ComNode(" + getDesc() + ")";
     }
 
     private Object toResult(String name, Variant.VARIANT v) {
         Object o = Variants.from(v);
         if (o instanceof Dispatcher) {
-            return new ComObject(desc + '.' + name, (Dispatcher) o);
+            return new ComObject(this, name, (Dispatcher) o, fieldTypes);
         }
         return o;
     }
 
     private RuntimeException newException(COMException e) {
-        return Variants.newException(desc, e);
+        return Variants.newException(getDesc(), e);
     }
 
     /**

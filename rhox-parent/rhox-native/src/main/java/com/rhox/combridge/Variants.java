@@ -5,11 +5,13 @@
  */
 package com.rhox.combridge;
 
+import com.sun.jna.IntegerType;
 import com.sun.jna.platform.win32.COM.COMBindingBaseObject;
 import com.sun.jna.platform.win32.COM.COMException;
 import com.sun.jna.platform.win32.COM.IDispatch;
 import com.sun.jna.platform.win32.OaIdl;
 import com.sun.jna.platform.win32.Variant.VARIANT;
+import com.sun.jna.platform.win32.WTypes;
 import java.util.Date;
 import java.util.NoSuchElementException;
 
@@ -108,14 +110,22 @@ final class Variants {
      */
     public static RuntimeException newException(String operation, COMException e) {
         OaIdl.EXCEPINFO info = e.getExcepInfo();
-        long error = info.wCode.longValue();
+        long error = getValue(info.wCode);
         if (error == 0L) {
-            error = info.scode.longValue();
+            error = getValue(info.scode);
         }
-        String source = info.bstrSource.getValue();
-        String description = info.bstrDescription.getValue();
+        String source = getValue(info.bstrSource);
+        String description = getValue(info.bstrDescription);
         return new UnsupportedOperationException(
                 String.format("%s failed! ErrorCode: %s, Source: %s, Message: %s", operation, error, source, description));
+    }
+
+    private static long getValue(IntegerType word) {
+        return word == null ? 0L : word.longValue();
+    }
+
+    private static String getValue(WTypes.BSTR bstr) {
+        return bstr == null ? null : bstr.getValue();
     }
 
     /**

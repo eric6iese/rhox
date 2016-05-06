@@ -54,6 +54,19 @@ public class ComDispatch {
     }
 
     /**
+     * Calls the Property getter with the given name and parameters and returns
+     * the result.
+     *
+     * @param name of the property
+     * @param arguments for the call
+     * @return value of the call, will be simple java type or a ComDispatch if
+     * it is a subobject
+     */
+    public Object get(String name, Object... arguments) {
+        return call(false, name, arguments);
+    }
+
+    /**
      * Sets the object value for the property with the given name.
      *
      * @param name name of the property to get
@@ -79,10 +92,14 @@ public class ComDispatch {
      * it is a subobject
      */
     public Object call(String name, Object... arguments) {
+        return call(true, name, arguments);
+    }
+
+    private Object call(boolean method, String name, Object... arguments) {
         try {
             DISPID id = dispatcher.getId(name);
             VARIANT[] vArgs = Variants.toArray(arguments);
-            VARIANT v = dispatcher.call(id, vArgs);
+            VARIANT v = dispatcher.call(method, id, vArgs);
             return toResult(name + "()", v);
         } catch (COMException ex) {
             throw newException(ex);

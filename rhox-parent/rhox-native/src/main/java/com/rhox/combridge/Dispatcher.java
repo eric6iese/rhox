@@ -70,8 +70,9 @@ final class Dispatcher extends COMLateBindingObject {
         call(OleAuto.DISPATCH_PROPERTYPUT, null, id, new VARIANT[]{value});
     }
 
-    public VARIANT call(DISPID id, VARIANT... args) {
+    public VARIANT call(boolean method, DISPID id, VARIANT... args) {
         VARIANT.ByReference result = new VARIANT.ByReference();
+        int type = method ? OleAuto.DISPATCH_METHOD : OleAuto.DISPATCH_PROPERTYGET;
         call(OleAuto.DISPATCH_METHOD, result, id, args);
         return result;
     }

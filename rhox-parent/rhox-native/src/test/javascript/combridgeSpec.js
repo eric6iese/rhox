@@ -7,7 +7,7 @@ try {
     throw e;
 }
 describe("comboject", function () {
-    it("does wonderful things", function () {
+    it("does wonderful things", function () {     
         // TODO: com-tests
     });
 });
