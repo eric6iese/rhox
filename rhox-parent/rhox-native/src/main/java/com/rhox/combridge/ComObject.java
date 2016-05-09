@@ -12,9 +12,10 @@ import com.sun.jna.platform.win32.Variant.VARIANT;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import jdk.nashorn.api.scripting.AbstractJSObject;
 
 /**
@@ -23,7 +24,7 @@ import jdk.nashorn.api.scripting.AbstractJSObject;
  * com-objects anyway).
  */
 @SuppressWarnings("restriction")
-public class ComObject extends AbstractJSObject {
+public final class ComObject extends AbstractJSObject {
 
     private final ComObject parent;
     /**
@@ -31,13 +32,7 @@ public class ComObject extends AbstractJSObject {
      */
     private final String name;
 
-    final Dispatcher dispatcher;
-
-    /**
-     * 'Remembers' internally which elements are used as properties and which
-     * are methods.
-     */
-    private final Map<String, ComType> fieldTypes;
+    private final Dispatcher dispatcher;
 
     /**
      * Creates a new JsComObject for the given com name.
@@ -49,17 +44,55 @@ public class ComObject extends AbstractJSObject {
     }
 
     /**
-     * Internal helper constructor.
+     * Converts a ComDispatch into a ComObject.
+     *
+     * @param comDispatch which represents the initial state of this dispatch.
      */
-    private ComObject(ComObject parent, String name, Dispatcher dispatcher) {
-        this(parent, name, dispatcher, new HashMap<>());
+    public ComObject(ComDispatch comDispatch) {
+        this(null, comDispatch.getPath(), comDispatch.getDispatcher());
     }
 
-    private ComObject(ComObject parent, String name, Dispatcher dispatcher, Map<String, ComType> fieldTypes) {
+    /**
+     * Internal helper constructor.
+     */
+    ComObject(ComObject parent, String name, Dispatcher dispatcher) {
         this.parent = parent;
-        this.name = name;
+        this.name = Objects.requireNonNull(name, "Name must not be null");;
         this.dispatcher = dispatcher;
-        this.fieldTypes = fieldTypes;
+    }
+
+    /**
+     * Yields the internal dispatcher for package-friends.
+     */
+    Dispatcher getDispatcher() {
+        return dispatcher;
+    }
+
+    /**
+     * Re-creates the full qualified path of this ComObject.
+     */
+    String getPath() {
+        List<String> path = new ArrayList<>();
+        ComObject n = this;
+        while (n != null) {
+            path.add(n.name);
+            n = n.parent;
+        }
+        Collections.reverse(path);
+        return String.join(".", path);
+    }
+
+    @Override
+    public String toString() {
+        return "ComObject(" + getPath() + ")";
+    }
+
+    @Override
+    public Object getDefaultValue(Class<?> hint) {
+        if (hint == null || CharSequence.class.isAssignableFrom(hint)) {
+            return toString();
+        }
+        return super.getDefaultValue(hint);
     }
 
     /**
@@ -75,33 +108,25 @@ public class ComObject extends AbstractJSObject {
      */
     @Override
     public Object getMember(String name) {
+        requireRealNode();
+
         // Get id FIRST - if this operation fails then no field/ method parsing is necessary
         DISPID id = getId(name);
-
-        ComType type = fieldTypes.get(name);
-        if (ComType.METHOD.equals(type)) {
-            return methodNode(name);
-        }
         Variant.VARIANT v;
         try {
             v = dispatcher.get(id);
         } catch (COMException e) {
-            return methodNode(name);
+            return new ComObject(this, name, null);
         }
         int vtype = v.getVarType().intValue();
         if (vtype == Variant.VT_EMPTY) {
-            return methodNode(name);
+            return new ComObject(this, name, null);
         }
-        Object result = toResult(name, v);
-        setType(name, ComType.FIELD);
-        return result;
-    }
-
-    /**
-     * Creates a subinstance specially designed for invocations.
-     */
-    private ComObject methodNode(String name) {
-        return new ComObject(this, name, null, fieldTypes);
+        Object o = Variants.from(v);
+        if (o instanceof Dispatcher) {
+            return new ComObject(this, name, (Dispatcher) o);
+        }
+        return o;
     }
 
     /**
@@ -112,15 +137,15 @@ public class ComObject extends AbstractJSObject {
      */
     @Override
     public void setMember(String name, Object value) {
+        requireRealNode();
+
         DISPID id = getId(name);
         VARIANT vValue = Variants.to(value);
-        requireType(name, ComType.FIELD);
         try {
             dispatcher.set(id, vValue);
         } catch (COMException e) {
             throw newException(e);
         }
-        setType(name, ComType.FIELD);
     }
 
     @Override
@@ -136,12 +161,12 @@ public class ComObject extends AbstractJSObject {
      */
     public Object invoke(Object... args) {
         if (parent == null) {
-            throw new IllegalStateException("Cannot invoke " + name + "(" + Arrays.toString(args) + ") on the Root COM element!");
+            throw new IllegalStateException("Cannot invoke " + name + Variants.toSignature(args) + " on the Root COM element!");
         }
-        // todo hier muss ich evtl felder gegen das parent auflösen können...
         DISPID id = parent.getId(name);
         VARIANT[] vArgs = Variants.toArray(args);
-        // Wenn kein Dispatcher vorhanden ist, dann ist dies ein Method-Call
+        // If no dispatcher is present, this is treatened as a method call.
+        // otherwise, it must be a property resolution
         boolean method = dispatcher == null;
         Variant.VARIANT v;
         try {
@@ -149,40 +174,36 @@ public class ComObject extends AbstractJSObject {
         } catch (COMException e) {
             throw newException(e);
         }
-        Object result = toResult(name + "()", v);
-        setType(name, ComType.METHOD);
-        return result;
-    }
-
-    /**
-     * Liefert den voll qualifizierten Pfad des Comobjects zurück.
-     */
-    private String getDesc() {
-        List<String> path = new ArrayList<>();
-        ComObject n = this;
-        while (n != null) {
-            path.add(n.name);
-            n = n.parent;
-        }
-        Collections.reverse(path);
-        return String.join(".", path);
-    }
-
-    @Override
-    public String toString() {
-        return "ComNode(" + getDesc() + ")";
-    }
-
-    private Object toResult(String name, Variant.VARIANT v) {
         Object o = Variants.from(v);
         if (o instanceof Dispatcher) {
-            return new ComObject(this, name, (Dispatcher) o, fieldTypes);
+            return new ComObject(parent, name + Variants.toSignature(args), (Dispatcher) o);
         }
         return o;
     }
 
+    /**
+     * Returns the Result of a property or method invocation. This can either be
+     * value (string, int, etc) or another ComNode.
+     */
+    /**
+     * Property getting and setting requires the current node to be 'valid',
+     * meaning that it has a valid dispatcher.<br/>
+     * This differs from method invocation, which only requires the parent and
+     * current name to be valid.
+     */
+    private void requireRealNode() {
+        if (dispatcher == null) {
+            throw new UnsupportedOperationException(getPath() + " is not a valid ComNode!"
+                    + " You can use it for method invocation, but you cannot resolve properties against it!");
+        }
+    }
+
+    /**
+     * Wraps a COM-specific exception and raises it with full node-information
+     * as a runtime-exception.
+     */
     private RuntimeException newException(COMException e) {
-        return Variants.newException(getDesc(), e);
+        return Variants.newException(getPath(), e);
     }
 
     /**
@@ -194,28 +215,5 @@ public class ComObject extends AbstractJSObject {
         } catch (COMException e) {
             throw newException(e);
         }
-    }
-
-    /**
-     * Caches the id and and type, if they have not already been cached.
-     */
-    private void setType(String name, ComType type) {
-        fieldTypes.putIfAbsent(name, type);
-    }
-
-    /**
-     * Tests if this field with the given name is of the given type. Throws an
-     * exception otherwise.
-     */
-    private void requireType(String name, ComType type) {
-        ComType ctype = fieldTypes.get(name);
-        if (ctype == null) {
-            return;
-        }
-        if (ctype.equals(type)) {
-            return;
-        }
-        throw new UnsupportedOperationException("Name '" + name + "' was already resolved as a "
-                + ctype + " but required was a " + type + "!");
     }
 }

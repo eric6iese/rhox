@@ -14,6 +14,8 @@ import com.sun.jna.platform.win32.Variant.VARIANT;
 import com.sun.jna.platform.win32.WTypes;
 import java.util.Date;
 import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.StringJoiner;
 
 /**
  * Utility methods for converting variants to native JavaObjects.
@@ -71,10 +73,10 @@ final class Variants {
             return new VARIANT(((COMBindingBaseObject) in).getIDispatch());
         }
         if (in instanceof ComDispatch) {
-            return new VARIANT(((ComDispatch) in).dispatcher.getIDispatch());
+            return new VARIANT(((ComDispatch) in).getDispatcher().getIDispatch());
         }
         if (in instanceof ComObject) {
-            return new VARIANT(((ComObject) in).dispatcher.getIDispatch());
+            return new VARIANT(((ComObject) in).getDispatcher().getIDispatch());
         }
         throw new NoSuchElementException("Unkown type: " + in + "!");
     }
@@ -110,6 +112,9 @@ final class Variants {
      */
     public static RuntimeException newException(String operation, COMException e) {
         OaIdl.EXCEPINFO info = e.getExcepInfo();
+        if (info == null) {
+            throw new UnsupportedOperationException(e);
+        }
         long error = getValue(info.wCode);
         if (error == 0L) {
             error = getValue(info.scode);
@@ -126,6 +131,24 @@ final class Variants {
 
     private static String getValue(WTypes.BSTR bstr) {
         return bstr == null ? null : bstr.getValue();
+    }
+
+    /**
+     * Creates a human-readable signature from the current node name and the
+     * given parameters (used in invoke).
+     */
+    public static String toSignature(Object... args) {
+        StringJoiner joiner = new StringJoiner(",", "(", ")");
+        for (Object arg : args) {
+            String v;
+            if (arg instanceof CharSequence) {
+                v = "'" + arg + "'";
+            } else {
+                v = Objects.toString(arg);
+            }
+            joiner.add(v);
+        }
+        return joiner.toString();
     }
 
     /**

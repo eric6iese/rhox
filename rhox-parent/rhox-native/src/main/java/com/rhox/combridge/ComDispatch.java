@@ -8,6 +8,7 @@ package com.rhox.combridge;
 import com.sun.jna.platform.win32.COM.COMException;
 import com.sun.jna.platform.win32.OaIdl.DISPID;
 import com.sun.jna.platform.win32.Variant.VARIANT;
+import java.util.Objects;
 
 /**
  * An alternative to the JsComObject is the ComDispatch.<br/>
@@ -17,10 +18,10 @@ import com.sun.jna.platform.win32.Variant.VARIANT;
  * (experimental) protocol it uses for method resolution does not work in some
  * cases.
  */
-public class ComDispatch {
+public final class ComDispatch {
 
-    private final String desc;
-    final Dispatcher dispatcher;
+    private final String path;
+    private final Dispatcher dispatcher;
 
     /**
      * Creates a new JsComDispatch for the given name.
@@ -31,9 +32,40 @@ public class ComDispatch {
         this(name, new Dispatcher(name));
     }
 
-    public ComDispatch(String desc, Dispatcher dispatcher) {
-        this.desc = desc;
-        this.dispatcher = dispatcher;
+    /**
+     * Converts a ComObject into a comdispatch.
+     *
+     * @param comObject which represents the initial state of this dispatch.
+     */
+    public ComDispatch(ComObject comObject) {
+        this(comObject.getPath(), comObject.getDispatcher());
+    }
+
+    /**
+     * Creates a new ComObject with the given Dispatcher.
+     */
+    ComDispatch(String path, Dispatcher dispatcher) {
+        this.path = Objects.requireNonNull(path, "Path must not be null");
+        this.dispatcher = Objects.requireNonNull(dispatcher, "Dispatcher must not be null");
+    }
+
+    /**
+     * Yields the internal dispatcher for package-friends.
+     */
+    Dispatcher getDispatcher() {
+        return dispatcher;
+    }
+
+    /**
+     * Yields the current comPath the Dispatch is in
+     */
+    String getPath() {
+        return path;
+    }
+
+    @Override
+    public String toString() {
+        return "ComDispatch(" + getPath() + ")";
     }
 
     /**
@@ -44,13 +76,18 @@ public class ComDispatch {
      * it is a subobject
      */
     public Object get(String name) {
+        DISPID id = getId(name);
+        VARIANT v;
         try {
-            DISPID id = dispatcher.getId(name);
-            VARIANT v = dispatcher.get(id);
-            return toResult(name, v);
+            v = dispatcher.get(id);
         } catch (COMException ex) {
             throw newException(ex);
         }
+        Object o = Variants.from(v);
+        if (o instanceof Dispatcher) {
+            return new ComDispatch(path + '.' + name, (Dispatcher) o);
+        }
+        return o;
     }
 
     /**
@@ -73,9 +110,9 @@ public class ComDispatch {
      * @param value value to set
      */
     public void set(String name, Object value) {
+        DISPID id = getId(name);
+        VARIANT vValue = Variants.to(value);
         try {
-            DISPID id = dispatcher.getId(name);
-            VARIANT vValue = Variants.to(value);
             dispatcher.set(id, vValue);
         } catch (COMException ex) {
             throw newException(ex);
@@ -96,25 +133,33 @@ public class ComDispatch {
     }
 
     private Object call(boolean method, String name, Object... arguments) {
+        DISPID id = getId(name);
+        VARIANT[] vArgs = Variants.toArray(arguments);
+        VARIANT v;
         try {
-            DISPID id = dispatcher.getId(name);
-            VARIANT[] vArgs = Variants.toArray(arguments);
-            VARIANT v = dispatcher.call(method, id, vArgs);
-            return toResult(name + "()", v);
+            v = dispatcher.call(method, id, vArgs);
         } catch (COMException ex) {
             throw newException(ex);
         }
-    }
-
-    private Object toResult(String name, VARIANT v) {
         Object o = Variants.from(v);
         if (o instanceof Dispatcher) {
-            return new ComDispatch(desc + '.' + name, (Dispatcher) o);
+            return new ComDispatch(path + '.' + name + Variants.toSignature(arguments), (Dispatcher) o);
         }
         return o;
     }
 
     private RuntimeException newException(COMException ex) {
-        return Variants.newException(desc, ex);
+        return Variants.newException(path, ex);
+    }
+
+    /**
+     * Gets the display id for the given name or creates a new one.
+     */
+    private DISPID getId(String name) {
+        try {
+            return dispatcher.getId(name);
+        } catch (COMException e) {
+            throw newException(e);
+        }
     }
 }
