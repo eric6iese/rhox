@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.rhox</groupId>
         <artifactId>rhox-parent</artifactId>
-        <version>0.1.1</version>
+        <version>0.2.0</version>
     </parent>
     <artifactId>rhox-node</artifactId>
     <description>... This is an attempt to create a minimal wrapper to use some node libraries on nashorn.

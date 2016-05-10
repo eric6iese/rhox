@@ -37,7 +37,7 @@ Use Windows COM-Objects as if they were native Javascript Objects
 
 ```javascript
 var native = require('rhox-native');
-var ComObject = native.ComObject;
+var ComObject = native.win32.ComObject;
 
 // Create a new ComObject binding for Word
 var word = new ComObject('Word.Application');

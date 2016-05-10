@@ -28,8 +28,8 @@ final class Dispatcher extends COMLateBindingObject {
      */
     private final Map<String, DISPID> idCache = new ConcurrentHashMap<>();
 
-    Dispatcher(String name) {
-        super(name, false);
+    Dispatcher(String progId) {
+        super(progId, false);
     }
 
     Dispatcher(IDispatch dispatch) {

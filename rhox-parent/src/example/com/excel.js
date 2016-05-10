@@ -32,6 +32,8 @@ try {
     Cells = new ComObject(CellDispatch);
     out.println(Cells + ":");
     out.println(Cells.Value);
+    // doesn't work... yet.
+    // out.println("By Range:" + Excel.Worksheets("Tabelle1").Range("A1").Value);
     
     out.println("more tests of value")
     out.println(out + " - ");

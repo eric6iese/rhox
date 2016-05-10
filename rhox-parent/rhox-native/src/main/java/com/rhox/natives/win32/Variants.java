@@ -122,7 +122,7 @@ final class Variants {
         String source = getValue(info.bstrSource);
         String description = getValue(info.bstrDescription);
         return new UnsupportedOperationException(
-                String.format("%s failed! ErrorCode: %s, Source: %s, Message: %s", operation, error, source, description));
+                String.format("%s failed! ErrorCode: %s, Source: %s, Message: %s", operation, error, source, description), e);
     }
 
     private static long getValue(IntegerType word) {

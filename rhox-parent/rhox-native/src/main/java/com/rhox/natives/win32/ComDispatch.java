@@ -24,12 +24,12 @@ public final class ComDispatch {
     private final Dispatcher dispatcher;
 
     /**
-     * Creates a new JsComDispatch for the given name.
+     * Creates a new ComDispatch for the given name.
      *
-     * @param name com object identifier
+     * @param progId the com progId
      */
-    public ComDispatch(String name) {
-        this(name, new Dispatcher(name));
+    public ComDispatch(String progId) {
+        this(progId, new Dispatcher(progId));
     }
 
     /**

@@ -34,10 +34,10 @@ public final class ComObject extends AbstractJSObject {
     /**
      * Creates a new JsComObject for the given com name.
      *
-     * @param name the com name
+     * @param progId the COM progId
      */
-    public ComObject(String name) {
-        this(null, name, new Dispatcher(name));
+    public ComObject(String progId) {
+        this(null, progId, new Dispatcher(progId));
     }
 
     /**
