@@ -6,7 +6,7 @@ try {
     }
     throw e;
 }
-describe("comboject", function () {
+describe("combobject", function () {
     it("does wonderful things", function () {     
         // TODO: com-tests
     });

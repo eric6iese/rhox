@@ -1,7 +1,7 @@
 load(java.lang.System.getenv('NASHORN_GLOBALS'));
 
 var native = require('rhox-native');
-var ComObject = native.ComObject;
+var ComObject = native.win32.ComObject;
 
 var System = Java.type('java.lang.System')
 var Runtime = Java.type('java.lang.Runtime')

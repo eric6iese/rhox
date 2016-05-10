@@ -2,9 +2,9 @@ load(java.lang.System.getenv('NASHORN_GLOBALS'));
 
 var out = java.lang.System.out;
 
-var native = require('rhox-native');
-var ComObject = native.ComObject;
-var ComDispatch = native.ComDispatch;
+var win32 = require('rhox-native').win32;
+var ComObject = win32.ComObject;
+var ComDispatch = win32.ComDispatch;
 
 var Excel = new ComObject('Excel.Application');
 var file = new java.io.File('excel.xlsx').getCanonicalFile();
@@ -32,7 +32,13 @@ try {
     Cells = new ComObject(CellDispatch);
     out.println(Cells + ":");
     out.println(Cells.Value);
-
+    
+    out.println("more tests of value")
+    out.println(out + " - ");
+    out.println(1 + out);
+    out.println(1 + "hallo");
+    out.println(1 + Cells);
+    
 } catch(e){
     e.printStackTrace();
 }finally {

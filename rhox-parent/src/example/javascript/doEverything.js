@@ -12,7 +12,7 @@ System.out.println(list);
 
 
 var native = require('rhox-native');
-var ComObject = native.ComObject;
+var ComObject = native.win32.ComObject;
 var au = new ComObject("AutoItX3.Control");
 
 

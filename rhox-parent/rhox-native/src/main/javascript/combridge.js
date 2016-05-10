@@ -1,11 +1,9 @@
 var classpath = require('rhox-classpath');
 
-var comModule = classpath.createModule();
-comModule.include(__dirname + '/lib/*.jar');
+var nativeModule = classpath.createModule();
+nativeModule.include(__dirname + '/lib/*.jar');
 
-
-exports.toString = function () {
-    return "Native{}";
+exports.win32 = {
+    ComObject: nativeModule.type('com.rhox.natives.win32.ComObject'),
+    ComDispatch: nativeModule.type('com.rhox.natives.win32.ComDispatch')
 };
-exports.ComObject = comModule.type('com.rhox.combridge.ComObject');
-exports.ComDispatch = comModule.type('com.rhox.combridge.ComDispatch');

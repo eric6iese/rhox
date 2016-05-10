@@ -6,7 +6,7 @@ try {
     e.cause.printStackTrace();
 }
 
-var ComObject = native.ComObject;
+var ComObject = native.win32.ComObject;
 
 
 var System = Java.type('java.lang.System')

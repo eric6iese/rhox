@@ -1,4 +1,4 @@
-package com.rhox.combridge;
+package com.rhox.natives.win32;
 
 import com.sun.jna.WString;
 import static com.sun.jna.platform.win32.COM.COMBindingBaseObject.LOCALE_USER_DEFAULT;

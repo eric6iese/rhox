@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.rhox.combridge;
+package com.rhox.natives.win32;
 
 import com.sun.jna.IntegerType;
 import com.sun.jna.platform.win32.COM.COMBindingBaseObject;
