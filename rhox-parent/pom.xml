@@ -3,10 +3,10 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.rhox</groupId>
     <artifactId>rhox-parent</artifactId>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
     <packaging>pom</packaging>
     <name>rhox-parent</name>
-    <description>Collection of autoit script bindings for java and nashorn</description>
+    <description>Collection of nashorn scripting utilities</description>
     <url>https://github.com/eric6iese/rhox</url>
     <properties>        
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -35,7 +35,17 @@
             </dependency>
             <dependency>
                 <groupId>com.rhox</groupId>
-                <artifactId>rhox-combridge</artifactId>
+                <artifactId>rhox-maven</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rhox</groupId>
+                <artifactId>rhox-exec</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rhox</groupId>
+                <artifactId>rhox-native</artifactId>
                 <version>${project.version}</version>
             </dependency>
             
@@ -48,7 +58,7 @@
             <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
-                <version>3.2.0</version>
+                <version>3.4.1</version>
             </dependency>
             <dependency>
                 <groupId>de.helwich.junit</groupId>
@@ -133,7 +143,7 @@
         <module>rhox-classpath</module>
         <module>rhox-maven</module>
         <module>rhox-test</module>
-        <!-- <module>rhox-node</module> -->
         <module>rhox-native</module>
+		<module>rhox-exec</module>
     </modules>
 </project>
