@@ -1,0 +1,16 @@
+{
+    "name": "${project.artifactId}",
+    "version": "${project.version}",
+    "description": "${project.description}",
+    "homepage": "${project.url}",
+    "author": {
+        "name": "${author.name}",
+        "email": "${author.email}",
+        "email": "${author.homepage}"
+    },
+    "license": "${project.license}",
+    "main": "exec.js",
+    "dependencies": {
+        "rhox-classpath": "https://github.com/eric6iese/rhox/releases/download/${project.version}/rhox-exec.tar.gz"
+    }
+}
