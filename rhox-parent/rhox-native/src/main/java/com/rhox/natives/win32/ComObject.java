@@ -115,6 +115,11 @@ public final class ComObject extends AbstractJSObject {
         } catch (COMException e) {
             return new ComObject(this, name, null);
         }
+        // TODO: An der Stelle muss ich vielleicht noch mal prüfen auf was vt_empty mappen sollte:
+        // Mein erster Gedanke war es ist ein ungültiges Member, aber das scheint leider nicht zu greifen
+        // Die andere Variante geht aber dann nicht z.B. beim auflösen von WordBasic.FileSaveAs!
+        // Ich fürchte ich muss mir hier einen besonderen Trick einfallen lassen,
+        // aber wie weiß ich noch nicht. Etwas ähnliches gilt bei exotischen Kombinationen aus Properties und Methods.
         int vtype = v.getVarType().intValue();
         if (vtype == Variant.VT_EMPTY) {
             return new ComObject(this, name, null);
