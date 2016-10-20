@@ -12,7 +12,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Extends the Shell with countless overloads to allow for a simpler scripting support in Nashorn.
+ * Extends the Shell with countless overloads to allow for a simpler scripting
+ * support in Nashorn.
  */
 public class JsRhoxShell extends RhoxShell {
 
@@ -70,48 +71,6 @@ public class JsRhoxShell extends RhoxShell {
 
     public void setErr(Collection<String> err) {
         setErr(err::add);
-    }
-
-    /**
-     * Writes the binary contents to the given file.
-     */
-    public void writeFile(Path file, byte[] data) {
-        writeFile(file, new ByteArrayInputStream(data));
-    }
-
-    /**
-     * Writes all lines to the given file.
-     */
-    public void writeFile(Path file, Iterable<String> lines) {
-        writeFile(file, newLineReader(lines));
-    }
-
-    /**
-     * Write the content to the given file.
-     */
-    public void writeFile(Path file, String content) {
-        writeFile(file, newLineReader(content));
-    }
-
-    /**
-     * Write the content to the given file.
-     */
-    public void writeFile(Path file, Reader reader) {
-        writeFile(file, newLineReader(reader));
-    }
-
-    /**
-     * Reads the contents of the given file line-by-line.
-     */
-    public void readFile(Path file, Appendable writer) {
-        readFile(file, newLineWriter(writer));
-    }
-
-    /**
-     * Reads the contents of the given file line-by-line.
-     */
-    public void readFile(Path file, Collection<String> lines) {
-        readFile(file, newLineWriter(lines));
     }
 
     private Supplier<String> newLineReader(Iterable<String> iterable) {

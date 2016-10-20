@@ -2,6 +2,7 @@ package com.rhox.exec;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,6 +10,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.StringReader;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.lang.ProcessBuilder.Redirect;
@@ -25,7 +27,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
- * A combination of a process-execution library and a file handler used for easier scripting.<br/>
+ * A combination of a process-execution library and a file handler used for
+ * easier scripting.<br/>
  *
  * @author giese
  */
@@ -45,8 +48,8 @@ public class RhoxShell {
     private Object err;
 
     /**
-     * The line separator used by the external process. Used especially for sending piped input to the process, but
-     * ignored in most other cases.
+     * The line separator used by the external process. Used especially for
+     * sending piped input to the process, but ignored in most other cases.
      */
     private String lineSeparator = System.getProperty("line.separator");
 
@@ -56,10 +59,10 @@ public class RhoxShell {
     private Charset charset = Charset.defaultCharset();
 
     /**
-     * Modifies the working directory for all processes started afterwards. Setting it to null will restore the default.
+     * Modifies the working directory for all processes started afterwards.
+     * Setting it to null will restore the default.
      *
-     * @param the
-     *            work dir
+     * @param the work dir
      */
     public void setDir(String dir) {
         if (dir == null) {
@@ -72,7 +75,8 @@ public class RhoxShell {
     }
 
     /**
-     * the currently set directory, or null if the default workdir should be used.
+     * the currently set directory, or null if the default workdir should be
+     * used.
      */
     public String getDir() {
         return dir == null ? null : dir.toString();
@@ -151,7 +155,8 @@ public class RhoxShell {
 
     /**
      * Starts a new Process from the commandline.<br/>
-     * Converts the command into an List-based args using the same implementation as Runtime.exec().
+     * Converts the command into an List-based args using the same
+     * implementation as Runtime.exec().
      */
     public Process start(String command) {
         StringTokenizer st = new StringTokenizer(command);
@@ -163,8 +168,8 @@ public class RhoxShell {
     }
 
     /**
-     * Starts a new Process from the commandline. The command is derived from the arguments, all of them are converted
-     * to strings, if necessary.
+     * Starts a new Process from the commandline. The command is derived from
+     * the arguments, all of them are converted to strings, if necessary.
      */
     public Process start(List<?> command) {
         List<String> args = command.stream().map(Objects::toString).collect(Collectors.toList());
@@ -212,7 +217,7 @@ public class RhoxShell {
             } catch (IOException ioe) {
                 throw new UncheckedIOException(ioe);
             }
-        } , name).start();
+        }, name).start();
     }
 
     private void startOutputThread(String name, Object output, InputStream in) {
@@ -222,7 +227,7 @@ public class RhoxShell {
             } catch (IOException ioe) {
                 throw new UncheckedIOException(ioe);
             }
-        } , name).start();
+        }, name).start();
     }
 
     /**
@@ -240,58 +245,90 @@ public class RhoxShell {
     }
 
     /**
-     * Writes the binary contents to the given file.
+     * Copies all data from any kind of input into the output.
      */
-    public void writeFile(Path file, InputStream in) {
-        try {
-            Files.copy(in, file);
-        } catch (IOException ioe) {
-            throw new UncheckedIOException(ioe);
+    public void copy(Object input, Object output) {
+        if (input instanceof Path) {
+            copyFileToOutput((Path) input, output);
+        } else if (output instanceof Path) {
+            copyInputToFile(input, (Path) output);
+        } else {
+            copyStream(input, output);
+        }
+    }
+
+    private Object normalizeInput(Object input) {
+        if (input instanceof File) {
+            return ((File) input).toPath();
+        }
+        if (input instanceof byte[]) {
+            return new ByteArrayInputStream((byte[]) input);
+        }
+        if (input instanceof CharSequence) {
+            return new StringReader(input.toString());
+        }
+        return input;
+    }
+
+    private Object normalizeOutput(Object output) {
+        if (output instanceof File) {
+            return ((File) output).toPath();
+        }
+        if (output instanceof Appendable) {
+            return newLineWriter((Appendable) output);
+        }
+        return output;
+    }
+
+    private void copyFileToOutput(Path infile, Object output) {
+        if (output instanceof Path) {
+            try {
+                Files.copy(infile, (Path) output);
+            } catch (IOException ioe) {
+                throw new UncheckedIOException(ioe);
+            }
+        } else if (output instanceof OutputStream) {
+            try {
+                Files.copy(infile, (OutputStream) output);
+            } catch (IOException ioe) {
+                throw new UncheckedIOException(ioe);
+            }
+        } else {
+            try (BufferedReader reader = Files.newBufferedReader(infile)) {
+                copyStream(reader, output);
+            } catch (IOException ioe) {
+                throw new UncheckedIOException(ioe);
+            }
+        }
+    }
+
+    private void copyInputToFile(Object input, Path outfile) {
+        if (input instanceof InputStream) {
+            try {
+                Files.copy((InputStream) input, outfile);
+            } catch (IOException ioe) {
+                throw new UncheckedIOException(ioe);
+            }
+        } else {
+            try (BufferedWriter writer = Files.newBufferedWriter(outfile)) {
+                copyStream(input, writer);
+            } catch (IOException ioe) {
+                throw new UncheckedIOException(ioe);
+            }
         }
     }
 
     /**
-     * Write the content to the given file.
-     */
-    public void writeFile(Path file, Supplier<String> lineReader) {
-        try (BufferedWriter writer = Files.newBufferedWriter(file)) {
-            copyLines(lineReader, newLineWriter(writer));
-        } catch (IOException ioe) {
-            throw new UncheckedIOException(ioe);
-        }
-    }
-
-    /**
-     * Read the content of the given file.
-     */
-    public void readFile(Path file, OutputStream out) {
-        try {
-            Files.copy(file, out);
-        } catch (IOException ioe) {
-            throw new UncheckedIOException(ioe);
-        }
-    }
-
-    /**
-     * Reads the contents of the given file line-by-line.
-     */
-    public void readFile(Path file, Consumer<String> lineWriter) {
-        try (BufferedReader reader = Files.newBufferedReader(file)) {
-            copyLines(newLineReader(reader), lineWriter);
-        } catch (IOException ioe) {
-            throw new UncheckedIOException(ioe);
-        }
-    }
-
-    /**
-     * Copies all data from an input streamlike resource to the output streamlike resource. Used for piped-io with
-     * processes.<br/>
-     * Please note that this method currently is entirely focussed on char-data and cannot cope with binary data in any
-     * way. Neither line-endings on different os'es or charsets are supported, instead always the system default is
-     * used. That's by design for now...
+     * Copies all data from an input streamlike resource to the output
+     * streamlike resource. Used for piped-io with processes.<br/>
+     * Please note that this method currently is entirely focussed on char-data
+     * and cannot cope with binary data in any way. Neither line-endings on
+     * different os'es or charsets are supported, instead always the system
+     * default is used. That's by design for now...
      * <p>
-     * Note as well that is implementation is horribly slow as it is, but this really shouldn't matter here, since this
-     * will rarely be the bottleneck in the IPC.
+     * Note as well that is implementation is horribly slow as it is, but this
+     * really shouldn't matter here, since this will rarely be the bottleneck in
+     * the IPC.
      */
     private void copyStream(Object input, Object output) {
         if (input instanceof InputStream) {
@@ -363,8 +400,8 @@ public class RhoxShell {
     }
 
     /**
-     * Creates a new line-based writer out of the appendable. If the appendable is a java.io.writer, then Autoflushing
-     * is done.
+     * Creates a new line-based writer out of the appendable. If the appendable
+     * is a java.io.writer, then Autoflushing is done.
      */
     protected Consumer<String> newLineWriter(Appendable appendable) {
         if (appendable instanceof Writer) {

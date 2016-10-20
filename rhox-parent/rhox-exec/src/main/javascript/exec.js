@@ -121,25 +121,10 @@ function Shell() {
 	}
 
 	/**
-	 * Create a new temporary file.<br/>
-	 * The file is automatically deleted when the jvm terminates.
+         * Copies some kind of input into some kind of output.
 	 */
-	this.createTempFile = function() {
-		return rhoxShell.createTempFile();
-	}
-
-	/**
-	 * Write the content of the input into the file.
-	 */
-	this.writeFile = function(file, input) {
-		return rhoxShell.writeFile(input, file);
-	}
-
-	/**
-	 * Read the content from the file into the output.
-	 */
-	this.readFile = function(file, output) {
-		return rhoxShell.readFile(file, output);
+	this.copy = function(input, output) {
+            return rhoxShell.writeFile(input, file);
 	}
 };
 
