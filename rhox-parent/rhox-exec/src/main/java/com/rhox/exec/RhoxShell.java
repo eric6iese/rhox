@@ -18,6 +18,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -41,24 +42,27 @@ public class RhoxShell {
      */
     private static final Object REDIRECT_ERR = new Object();
 
-    private Path dir;
+    private static final String LN = System.getProperty("line.separator");
+    private static final Path USER_DIR = Paths.get(System.getProperty("user.dir"));
+
+    private Path dir = USER_DIR;
+
+    /**
+     * The line separator used by the external process. Used especially for
+     * sending piped input to the process, but ignored in most other cases.
+     */
+    private String lineSeparator = LN;
+
+    /**
+     * The charset used by the external process.
+     */
+    private Charset charset = Charset.defaultCharset();
 
     private Object in;
 
     private Object out;
 
     private Object err;
-
-    /**
-     * The line separator used by the external process. Used especially for
-     * sending piped input to the process, but ignored in most other cases.
-     */
-    private String lineSeparator = System.getProperty("line.separator");
-
-    /**
-     * The charset used by the external process.
-     */
-    private Charset charset = Charset.defaultCharset();
 
     /**
      * Modifies the working directory for all processes started afterwards.
@@ -337,7 +341,7 @@ public class RhoxShell {
     private void copyFileToOutput(Path infile, Object output) {
         if (output instanceof Path) {
             try {
-                Files.copy(infile, (Path) output);
+                Files.copy(infile, (Path) output, StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException ioe) {
                 throw new UncheckedIOException(ioe);
             }
@@ -349,7 +353,7 @@ public class RhoxShell {
             }
         } else {
             try (BufferedReader reader = Files.newBufferedReader(infile)) {
-                copyStream(reader, output);
+                copyStream(newLineSupplier(reader), output);
             } catch (IOException ioe) {
                 throw new UncheckedIOException(ioe);
             }
@@ -365,7 +369,7 @@ public class RhoxShell {
             }
         } else {
             try (BufferedWriter writer = Files.newBufferedWriter(outfile)) {
-                copyStream(input, writer);
+                copyStream(input, newLineConsumer(writer));
             } catch (IOException ioe) {
                 throw new UncheckedIOException(ioe);
             }
