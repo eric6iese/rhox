@@ -19,6 +19,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.StringTokenizer;
@@ -98,40 +100,28 @@ public class RhoxShell {
         return charset;
     }
 
-    public void setIn(Path in) {
+    public Object getIn() {
+        return in;
+    }
+
+    public void setIn(Object in) {
         this.in = in;
     }
 
-    public void setIn(InputStream in) {
-        this.in = in;
-    }
-
-    public void setIn(Supplier<String> in) {
-        this.in = in;
-    }
-
-    public void setOut(Path out) {
+    public void setOut(Object out) {
         this.out = out;
     }
 
-    public void setOut(OutputStream out) {
-        this.out = out;
+    public Object getOut() {
+        return out;
     }
 
-    public void setOut(Consumer<String> out) {
-        this.out = out;
-    }
-
-    public void setErr(Path err) {
+    public void setErr(Object err) {
         this.err = err;
     }
 
-    public void setErr(OutputStream err) {
-        this.err = err;
-    }
-
-    public void setErr(Consumer<String> err) {
-        this.err = err;
+    public Object getErr() {
+        return err;
     }
 
     /**
@@ -154,17 +144,23 @@ public class RhoxShell {
     }
 
     /**
-     * Starts a new Process from the commandline.<br/>
+     * Starts a new Process from the commandline.
+     */
+    public Process start(String command) {
+        return start(toArgs(command));
+    }
+
+    /**
      * Converts the command into an List-based args using the same
      * implementation as Runtime.exec().
      */
-    public Process start(String command) {
+    private List<String> toArgs(String command) {
         StringTokenizer st = new StringTokenizer(command);
         String[] cmdarray = new String[st.countTokens()];
         for (int i = 0; st.hasMoreTokens(); i++) {
             cmdarray[i] = st.nextToken();
         }
-        return start(Arrays.asList(cmdarray));
+        return Arrays.asList(cmdarray);
     }
 
     /**
@@ -211,9 +207,10 @@ public class RhoxShell {
     }
 
     private void startInputThread(String name, Object input, OutputStream out) {
+        Object in = normalizeInput(input);
         new Thread(() -> {
             try (OutputStream os = out) {
-                copyStream(input, os);
+                copyStream(in, os);
             } catch (IOException ioe) {
                 throw new UncheckedIOException(ioe);
             }
@@ -221,13 +218,26 @@ public class RhoxShell {
     }
 
     private void startOutputThread(String name, Object output, InputStream in) {
+        Object out = normalizeOutput(output);
         new Thread(() -> {
             try (InputStream is = in) {
-                copyStream(is, output);
+                copyStream(is, out);
             } catch (IOException ioe) {
                 throw new UncheckedIOException(ioe);
             }
         }, name).start();
+    }
+
+    public int exec(String command) {
+        return exec(toArgs(command));
+    }
+
+    public int exec(List<String> command) {
+        try {
+            return start(command).waitFor();
+        } catch (InterruptedException unexpected) {
+            throw new IllegalStateException(unexpected);
+        }
     }
 
     /**
@@ -248,6 +258,8 @@ public class RhoxShell {
      * Copies all data from any kind of input into the output.
      */
     public void copy(Object input, Object output) {
+        input = normalizeInput(input);
+        output = normalizeOutput(output);
         if (input instanceof Path) {
             copyFileToOutput((Path) input, output);
         } else if (output instanceof Path) {
@@ -258,26 +270,68 @@ public class RhoxShell {
     }
 
     private Object normalizeInput(Object input) {
+        // Files
         if (input instanceof File) {
-            return ((File) input).toPath();
+            input = ((File) input).toPath();
         }
+        if (input instanceof Path) {
+            return dir.resolve((Path) input);
+        }
+
+        // Binary Data
         if (input instanceof byte[]) {
-            return new ByteArrayInputStream((byte[]) input);
+            input = new ByteArrayInputStream((byte[]) input);
         }
+        if (input instanceof InputStream) {
+            return input;
+        }
+
+        // Character Data        
         if (input instanceof CharSequence) {
-            return new StringReader(input.toString());
+            input = new StringReader(input.toString());
         }
-        return input;
+        if (input instanceof Reader) {
+            input = newLineSupplier((Reader) input);
+        }
+        if (input instanceof Iterable) {
+            input = ((Iterable<?>) input).iterator();
+        }
+        if (input instanceof Iterator) {
+            input = newLineSupplier((Iterator<?>) input);
+        }
+        if (input instanceof Supplier) {
+            return (Supplier<?>) input;
+        }
+
+        throw new IllegalArgumentException("Invalid type: " + input);
     }
 
     private Object normalizeOutput(Object output) {
+        // Files
         if (output instanceof File) {
-            return ((File) output).toPath();
+            output = ((File) output).toPath();
+        }
+        if (output instanceof Path) {
+            return dir.resolve((Path) output);
+        }
+
+        // Binary data
+        if (output instanceof OutputStream) {
+            return output;
+        }
+
+        // Character Data
+        if (output instanceof Collection) {
+            output = newLineConsumer((Collection<?>) output);
         }
         if (output instanceof Appendable) {
-            return newLineWriter((Appendable) output);
+            output = newLineConsumer((Appendable) output);
         }
-        return output;
+        if (output instanceof Consumer) {
+            return output;
+        }
+
+        throw new IllegalArgumentException("Invalid type: " + output);
     }
 
     private void copyFileToOutput(Path infile, Object output) {
@@ -337,13 +391,12 @@ public class RhoxShell {
                 copyBinary(is, (OutputStream) output);
                 return;
             }
-            input = newLineReader(new InputStreamReader(is, charset));
+            input = newLineSupplier(new InputStreamReader(is, charset));
         }
         @SuppressWarnings("unchecked")
         Supplier<String> reader = (Supplier<String>) input;
-
         if (output instanceof OutputStream) {
-            output = newLineWriter(new OutputStreamWriter((OutputStream) output, charset));
+            output = newLineConsumer(new OutputStreamWriter((OutputStream) output, charset));
         }
         @SuppressWarnings("unchecked")
         Consumer<String> writer = (Consumer<String>) output;
@@ -388,7 +441,7 @@ public class RhoxShell {
     /**
      * Creates a new line-based supplier out of the inputstream reader.
      */
-    protected Supplier<String> newLineReader(Reader reader) {
+    private Supplier<String> newLineSupplier(Reader reader) {
         BufferedReader br = reader instanceof BufferedReader ? (BufferedReader) reader : new BufferedReader(reader);
         return () -> {
             try {
@@ -403,7 +456,7 @@ public class RhoxShell {
      * Creates a new line-based writer out of the appendable. If the appendable
      * is a java.io.writer, then Autoflushing is done.
      */
-    protected Consumer<String> newLineWriter(Appendable appendable) {
+    private Consumer<String> newLineConsumer(Appendable appendable) {
         if (appendable instanceof Writer) {
             Writer writer = (Writer) appendable;
             return line -> {
@@ -424,5 +477,13 @@ public class RhoxShell {
                 throw new UncheckedIOException(ioe);
             }
         };
+    }
+
+    private <E> Supplier<E> newLineSupplier(Iterator<E> iterator) {
+        return () -> iterator.hasNext() ? iterator.next() : null;
+    }
+
+    private <E> Consumer<E> newLineConsumer(Collection<E> collection) {
+        return collection::add;
     }
 }
