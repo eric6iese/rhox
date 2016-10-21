@@ -1,12 +1,14 @@
 package com.rhox.exec;
 
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import static java.util.Arrays.asList;
 import java.util.List;
-import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -45,11 +47,10 @@ public class RhoxShellTest {
     }
 
     /**
-     * This needs further discussion: Is appending always the best choice, or
-     * only for output and error? Or maybe not even then?
+     * This needs further discussion: Is appending always the best choice, or only for output and error? Or maybe not
+     * even then?
      * <p>
-     * Matters for files and collections, not for streams (which cannot be
-     * rewinded)
+     * Matters for files and collections, not for streams (which cannot be rewinded)
      */
     @Test
     public void copyAlwaysAppends() {
