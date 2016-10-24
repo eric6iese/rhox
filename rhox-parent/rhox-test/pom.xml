@@ -7,6 +7,7 @@
         <version>0.3.0</version>
     </parent>
     <artifactId>rhox-test</artifactId>
+    <version>0.2.0</version>
     <name>rhox-test</name>
     <description>Internal Project, provides the test-infrastructure with jasmine for the other rhox-projects.
         It uses a custom variant of the brilliant Jasmine-JUnit-Runner(https://github.com/hhelwich/junit-jasmine-runner)

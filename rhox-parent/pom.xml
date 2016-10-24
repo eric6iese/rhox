@@ -26,26 +26,26 @@
             <dependency>
                 <groupId>com.rhox</groupId>
                 <artifactId>rhox-test</artifactId>
-                <version>${project.version}</version>
+                <version>0.2.0</version>
             </dependency>
             <dependency>
                 <groupId>com.rhox</groupId>
                 <artifactId>rhox-classpath</artifactId>
-                <version>${project.version}</version>
+                <version>0.2.0</version>
             </dependency>
             <dependency>
                 <groupId>com.rhox</groupId>
                 <artifactId>rhox-maven</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.rhox</groupId>
-                <artifactId>rhox-exec</artifactId>
-                <version>${project.version}</version>
+                <version>0.2.0</version>
             </dependency>
             <dependency>
                 <groupId>com.rhox</groupId>
                 <artifactId>rhox-native</artifactId>
+                <version>0.2.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rhox</groupId>
+                <artifactId>rhox-exec</artifactId>
                 <version>${project.version}</version>
             </dependency>
             
@@ -58,7 +58,7 @@
             <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
-                <version>3.4.1</version>
+                <version>3.5.2</version>
             </dependency>
             <dependency>
                 <groupId>de.helwich.junit</groupId>
@@ -144,6 +144,6 @@
         <module>rhox-maven</module>
         <module>rhox-test</module>
         <module>rhox-native</module>
-		<module>rhox-exec</module>
+        <module>rhox-exec</module>
     </modules>
 </project>

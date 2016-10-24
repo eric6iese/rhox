@@ -7,6 +7,7 @@
         <version>0.3.0</version>
     </parent>
     <artifactId>rhox-maven</artifactId>
+    <version>0.2.0</version>
     <name>rhox-maven</name>
     <description>fetches dependencies with maven and adds them to the classpath</description>
     

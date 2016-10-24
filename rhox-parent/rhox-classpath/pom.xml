@@ -7,6 +7,7 @@
         <version>0.3.0</version>
     </parent>
     <artifactId>rhox-classpath</artifactId>
+    <version>0.2.0</version>
     <name>rhox-classpath</name>
     <description>add jars at runtime to your classpath</description>
     

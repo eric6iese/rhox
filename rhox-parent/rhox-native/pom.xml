@@ -7,6 +7,7 @@
         <version>0.3.0</version>
     </parent>
     <artifactId>rhox-native</artifactId>
+    <version>0.2.0</version>
     <name>rhox-native</name>
     <description>acess native libraries as javascript objects</description>
     
