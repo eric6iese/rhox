@@ -1,5 +1,6 @@
 package com.rhox.exec;
 
+import java.io.BufferedReader;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -8,6 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -72,4 +75,14 @@ public class RhoxShellTest {
         assertThat(out.toString().trim()).isEqualTo("hello");
     }
 
+    @Test
+    public void pipeEcho() throws Exception {
+        sh.setOut(ProcessRedirect.PIPE);
+        RhoxProcess proc = sh.start("cmd /c echo hello");
+        BufferedReader br = proc.getReader();
+        String out = br.readLine();
+        assertNull(br.readLine());
+        assertThat(proc.waitForOrDestroy(1000, TimeUnit.SECONDS)).isEqualTo(0);
+        assertThat(out).isEqualTo("hello");
+    }
 }

@@ -6,15 +6,20 @@
 package com.rhox.exec;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.Field;
+import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.util.Iterator;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Extends java.lang.process with additional char-based methods.
@@ -23,24 +28,19 @@ import java.util.concurrent.TimeUnit;
  */
 public class RhoxProcess extends Process {
 
-    private static final Field LINE_SEPARATOR_FIELD;
-
-    static {
-        try {
-            LINE_SEPARATOR_FIELD = BufferedWriter.class.getDeclaredField("lineSeparator");
-            LINE_SEPARATOR_FIELD.setAccessible(true);
-        } catch (NoSuchFieldException unexpected) {
-            throw new UnsupportedOperationException(unexpected);
-        }
-    }
-
     private final Process process;
+    private final OutputStream in;
+    private final InputStream out;
+    private final InputStream err;
     private final Charset charset;
     private final String lineSeparator;
-    private final Iterator<Thread> threads;
+    private final Iterator<Future<?>> threads;
 
-    RhoxProcess(Process process, Iterator<Thread> threads, Charset charset, String lineSeparator) {
+    RhoxProcess(Process process, OutputStream in, InputStream out, InputStream err, Iterator<Future<?>> threads, Charset charset, String lineSeparator) {
         this.process = process;
+        this.in = in;
+        this.out = out;
+        this.err = err;
         this.threads = threads;
         this.charset = charset;
         this.lineSeparator = lineSeparator;
@@ -58,9 +58,23 @@ public class RhoxProcess extends Process {
         return process.waitFor(timeout, unit);
     }
 
-    private void waitForThreads() throws InterruptedException {
+    public int waitForOrDestroy(long timeout, TimeUnit unit) throws InterruptedException {
+        waitFor(timeout, unit);
+        if (isAlive()) {
+            destroy();
+        }
+        return exitValue();
+    }
+
+    private void waitForThreads() {
         while (threads.hasNext()) {
-            threads.next().join();
+            try {
+                threads.next().get();
+            } catch (InterruptedException | ExecutionException ex) {
+                // Later I need to think about what should really happen here.
+                // Problem is, I can't do much anyway if one of the processors threads has died
+                Logger.getLogger(RhoxProcess.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -86,34 +100,60 @@ public class RhoxProcess extends Process {
 
     @Override
     public OutputStream getOutputStream() {
-        return process.getOutputStream();
+        if (in == null) {
+            throw new UnsupportedOperationException("No piped input");
+        }
+        return in;
     }
 
     @Override
     public InputStream getInputStream() {
-        return process.getInputStream();
+        if (out == null) {
+            throw new UnsupportedOperationException("No piped output");
+        }
+        return out;
     }
 
     @Override
     public InputStream getErrorStream() {
-        return process.getErrorStream();
-    }
-
-    public BufferedWriter getWriter() {
-        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(getOutputStream(), charset));
-        try {
-            LINE_SEPARATOR_FIELD.set(writer, lineSeparator);
-        } catch (ReflectiveOperationException unexpected) {
-            throw new UnsupportedOperationException(unexpected);
+        if (err == null) {
+            throw new UnsupportedOperationException("No piped error");
         }
-        return writer;
-
+        return err;
     }
 
+    /**
+     * Gets the piped PrinterWriter which can be used to send output to the
+     * stream.
+     */
+    public PrintWriter getWriter() {
+        return new PrintWriter(new OutputStreamWriter(getOutputStream(), charset), true) {
+            @Override
+            public void println() {
+                try {
+                    synchronized (lock) {
+                        out.write(lineSeparator);
+                        out.flush();
+                    }
+                } catch (InterruptedIOException x) {
+                    Thread.currentThread().interrupt();
+                } catch (IOException x) {
+                    setError();
+                }
+            }
+        };
+    }
+
+    /**
+     * Gets the piped reader for the output.
+     */
     public BufferedReader getReader() {
         return new BufferedReader(new InputStreamReader(getInputStream(), charset));
     }
 
+    /**
+     * Gets the piped reader for the error output.
+     */
     public BufferedReader getErrorReader() {
         return new BufferedReader(new InputStreamReader(getErrorStream(), charset));
     }

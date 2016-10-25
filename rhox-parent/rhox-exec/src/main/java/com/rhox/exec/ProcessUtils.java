@@ -10,10 +10,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
+import java.lang.ProcessBuilder.Redirect;
+import static java.lang.ProcessBuilder.Redirect.PIPE;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -24,6 +30,19 @@ final class ProcessUtils {
     public static final String LINE_SEPARATOR = System.getProperty("line.separator");
     public static final String USER_DIR = System.getProperty("user.dir");
 
+    private static ExecutorService EXEC = Executors.newCachedThreadPool();
+
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            EXEC.shutdown();
+            try {
+                EXEC.awaitTermination(120, TimeUnit.SECONDS);
+            } catch (InterruptedException ignored) {
+                // Cannot handle during shutdown!
+            }
+        }, "ExecutionShutdown"));
+    }
+
     /**
      * Starts a new Process from the commandline. The command is derived from
      * the arguments, all of them are converted to strings, if necessary.
@@ -33,15 +52,19 @@ final class ProcessUtils {
         if (config.getDir() != null) {
             processBuilder.directory(config.getDir().toFile());
         }
-        ProcessBuilder.Redirect rIn = createRedirect(config.getIn(), true);
+        Object input = config.getIn();
+        Object output = config.getOut();
+        Object error = config.getErr();
+
+        ProcessBuilder.Redirect rIn = createRedirect(input, true);
         processBuilder.redirectInput(rIn);
 
-        ProcessBuilder.Redirect rOut = createRedirect(config.getOut(), false);
+        ProcessBuilder.Redirect rOut = createRedirect(output, false);
         processBuilder.redirectOutput(rOut);
 
         ProcessBuilder.Redirect rErr;
         if (config.getRedirectErr()) {
-            rErr = createRedirect(config.getErr(), false);
+            rErr = createRedirect(error, false);
             processBuilder.redirectError(rErr);
         } else {
             rErr = null;
@@ -54,25 +77,43 @@ final class ProcessUtils {
         } catch (IOException ioe) {
             throw new UncheckedIOException(ioe);
         }
-        List<Thread> threads = new ArrayList<>();
-        if (rIn == ProcessBuilder.Redirect.PIPE) {
-            threads.add(startInputThread("ProcessInput", config, config.getIn(), process.getOutputStream()));
+        List<Future<?>> threads = new ArrayList<>();
+
+        OutputStream in = null;
+        if (rIn == PIPE) {
+            if (input == PIPE) {
+                in = process.getOutputStream();
+            } else {
+                threads.add(startInputThread(config, input, process.getOutputStream()));
+            }
         }
-        if (rOut == ProcessBuilder.Redirect.PIPE) {
-            threads.add(startOutputThread("ProcessOutput", config, config.getOut(), process.getInputStream()));
+
+        InputStream out = null;
+        if (rOut == PIPE) {
+            if (output == PIPE) {
+                out = process.getInputStream();
+            } else {
+                threads.add(startOutputThread(config, output, process.getInputStream()));
+            }
         }
-        if (rErr == ProcessBuilder.Redirect.PIPE) {
-            threads.add(startOutputThread("ProcessError", config, config.getErr(), process.getErrorStream()));
+
+        InputStream err = null;
+        if (rErr == PIPE) {
+            if (error == PIPE) {
+                err = process.getErrorStream();
+            } else {
+                threads.add(startOutputThread(config, error, process.getErrorStream()));
+            }
         }
-        return new RhoxProcess(process, threads.iterator(), config.getCharset(), config.getLineSeparator());
+        return new RhoxProcess(process, in, out, err, threads.iterator(), config.getCharset(), config.getLineSeparator());
     }
 
     /**
      * Creates the appropiate redirect, dependening on the target type.
      */
-    private static ProcessBuilder.Redirect createRedirect(Object target, boolean read) {
-        if (target instanceof ProcessBuilder.Redirect) {
-            return (ProcessBuilder.Redirect) target;
+    private static Redirect createRedirect(Object target, boolean read) {
+        if (target instanceof Redirect) {
+            return (Redirect) target;
         }
         if (target instanceof Path) {
             Path f = (Path) target;
@@ -85,20 +126,16 @@ final class ProcessUtils {
         return ProcessRedirect.PIPE;
     }
 
-    private static Thread startInputThread(String name, ProcessConfig config, Object input, OutputStream out) {
+    private static Future<?> startInputThread(ProcessConfig config, Object input, OutputStream out) {
         ProcessSource source = ProcessSource.of(input, config.getDir(), config.getCharset());
         StreamSink sink = new StreamSink(out, config.getCharset(), config.getLineSeparator());
-        Thread thread = new Thread(() -> source.copyTo(sink), name);
-        thread.start();
-        return thread;
+        return EXEC.submit(() -> source.copyTo(sink));
     }
 
-    private static Thread startOutputThread(String name, ProcessConfig config, Object output, InputStream in) {
+    private static Future<?> startOutputThread(ProcessConfig config, Object output, InputStream in) {
         StreamSource source = new StreamSource(in, config.getCharset());
         ProcessSink sink = ProcessSink.of(output, config.getDir(), config.getCharset(), config.getLineSeparator());
-        Thread thread = new Thread(() -> source.copyTo(sink), name);
-        thread.start();
-        return thread;
+        return EXEC.submit(() -> source.copyTo(sink));
     }
 
     public static Path toPath(Object file) {
