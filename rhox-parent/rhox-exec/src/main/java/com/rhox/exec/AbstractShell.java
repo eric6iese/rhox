@@ -5,11 +5,16 @@
  */
 package com.rhox.exec;
 
+import java.nio.charset.Charset;
+import static java.util.Objects.requireNonNull;
+
 /**
  *
  * @author giese
  */
 public class AbstractShell {
+
+    private static final String LN = System.getProperty("line.separator");
 
     protected final ProcessConfig config;
 
@@ -19,6 +24,8 @@ public class AbstractShell {
         config.setOut(ProcessRedirect.INHERIT);
         config.setErr(ProcessRedirect.INHERIT);
         config.setRedirectErr(false);
+        config.setLineSeparator(LN);
+        config.setCharset(Charset.defaultCharset());
     }
 
     public Object getIn() {
@@ -26,11 +33,11 @@ public class AbstractShell {
     }
 
     public void setIn(Object in) {
-        config.setIn(in);
+        config.setIn(requireNonNull(in, "in"));
     }
 
     public void setOut(Object out) {
-        config.setOut(out);
+        config.setOut(requireNonNull(out, "out"));
     }
 
     public Object getOut() {
@@ -38,7 +45,7 @@ public class AbstractShell {
     }
 
     public void setErr(Object err) {
-        config.setErr(err);
+        config.setErr(requireNonNull(err, "err"));
     }
 
     public Object getErr() {
@@ -52,4 +59,21 @@ public class AbstractShell {
     public boolean isRedirectErr() {
         return config.getRedirectErr();
     }
+
+    public void setLineSeparator(String lineSeparator) {
+        config.setLineSeparator(requireNonNull(lineSeparator, "lineSeparator"));
+    }
+
+    public String getLineSeparator() {
+        return config.getLineSeparator();
+    }
+
+    public void setCharset(Charset charset) {
+        config.setCharset(requireNonNull(charset, "charset"));
+    }
+
+    public Charset getCharset() {
+        return config.getCharset();
+    }
+
 }

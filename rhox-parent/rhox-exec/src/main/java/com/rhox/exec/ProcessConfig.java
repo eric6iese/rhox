@@ -5,6 +5,7 @@
  */
 package com.rhox.exec;
 
+import java.nio.charset.Charset;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -26,6 +27,17 @@ public class ProcessConfig implements Cloneable {
      * Marker, used to identify a redirected error stream.
      */
     private Boolean redirectErr;
+
+    /**
+     * The line separator used by the external process. Used especially for
+     * sending piped input to the process, but ignored in most other cases.
+     */
+    private String lineSeparator;
+
+    /**
+     * The charset used by the external process.
+     */
+    private Charset charset;
 
     public Object getIn() {
         return in;
@@ -63,6 +75,22 @@ public class ProcessConfig implements Cloneable {
         return redirectErr;
     }
 
+    public void setLineSeparator(String lineSeparator) {
+        this.lineSeparator = lineSeparator;
+    }
+
+    public String getLineSeparator() {
+        return lineSeparator;
+    }
+
+    public void setCharset(Charset charset) {
+        this.charset = charset;
+    }
+
+    public Charset getCharset() {
+        return charset;
+    }
+
     @Override
     protected ProcessConfig clone() {
         try {
@@ -83,6 +111,8 @@ public class ProcessConfig implements Cloneable {
             merge(in::getOut, cfg::setOut);
             merge(in::getErr, cfg::setErr);
             merge(in::getRedirectErr, cfg::setRedirectErr);
+            merge(in::getCharset, cfg::setCharset);
+            merge(in::getLineSeparator, cfg::setLineSeparator);
         }
         return cfg;
     }

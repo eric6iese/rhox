@@ -7,7 +7,6 @@ import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.lang.ProcessBuilder.Redirect;
 import static java.lang.System.out;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,21 +24,9 @@ import java.util.stream.Collectors;
  */
 public class RhoxShell extends AbstractShell {
 
-    private static final String LN = System.getProperty("line.separator");
     private static final Path USER_DIR = Paths.get(System.getProperty("user.dir"));
 
     private Path dir = USER_DIR;
-
-    /**
-     * The line separator used by the external process. Used especially for
-     * sending piped input to the process, but ignored in most other cases.
-     */
-    private String lineSeparator = LN;
-
-    /**
-     * The charset used by the external process.
-     */
-    private Charset charset = Charset.defaultCharset();
 
     /**
      * Modifies the working directory for all processes started afterwards.
@@ -63,22 +50,6 @@ public class RhoxShell extends AbstractShell {
      */
     public String getDir() {
         return dir == null ? null : dir.toString();
-    }
-
-    public void setLineSeparator(String lineSeparator) {
-        this.lineSeparator = lineSeparator;
-    }
-
-    public String getLineSeparator() {
-        return lineSeparator;
-    }
-
-    public void setCharset(Charset charset) {
-        this.charset = charset;
-    }
-
-    public Charset getCharset() {
-        return charset;
     }
 
     public int exec(String command) throws InterruptedException {
@@ -145,15 +116,15 @@ public class RhoxShell extends AbstractShell {
             throw new UncheckedIOException(ioe);
         }
         if (rIn == Redirect.PIPE) {
-            startInputThread("ProcessInput", config.getIn(), process.getOutputStream());
+            startInputThread("ProcessInput", config, config.getIn(), process.getOutputStream());
         }
         if (rOut == Redirect.PIPE) {
-            startOutputThread("ProcessOutput", config.getOut(), process.getInputStream());
+            startOutputThread("ProcessOutput", config, config.getOut(), process.getInputStream());
         }
         if (rErr == Redirect.PIPE) {
-            startOutputThread("ProcessError", config.getErr(), process.getErrorStream());
+            startOutputThread("ProcessError", config, config.getErr(), process.getErrorStream());
         }
-        return new RhoxProcess(process, charset, lineSeparator);
+        return new RhoxProcess(process, config.getCharset(), config.getLineSeparator());
     }
 
     /**
@@ -187,15 +158,15 @@ public class RhoxShell extends AbstractShell {
         return ProcessRedirect.PIPE;
     }
 
-    private void startInputThread(String name, Object input, OutputStream out) {
-        ProcessSource source = ProcessSource.of(input, dir, charset);
-        StreamSink sink = new StreamSink(out, charset, lineSeparator);
+    private void startInputThread(String name, ProcessConfig config, Object input, OutputStream out) {
+        ProcessSource source = ProcessSource.of(input, dir, config.getCharset());
+        StreamSink sink = new StreamSink(out, config.getCharset(), config.getLineSeparator());
         new Thread(() -> source.copyTo(sink), name).start();
     }
 
-    private void startOutputThread(String name, Object output, InputStream in) {
-        StreamSource source = new StreamSource(in, charset);
-        ProcessSink sink = ProcessSink.of(out, dir, charset, lineSeparator);
+    private void startOutputThread(String name, ProcessConfig config, Object output, InputStream in) {
+        StreamSource source = new StreamSource(in, config.getCharset());
+        ProcessSink sink = ProcessSink.of(out, dir, config.getCharset(), config.getLineSeparator());
         new Thread(() -> source.copyTo(sink), name).start();
     }
 
@@ -217,8 +188,8 @@ public class RhoxShell extends AbstractShell {
      * Copies all data from any kind of input into the output.
      */
     public void copy(Object input, Object output) {
-        ProcessSource source = ProcessSource.of(input, dir, charset);
-        ProcessSink sink = ProcessSink.of(output, dir, charset, lineSeparator);
+        ProcessSource source = ProcessSource.of(input, dir, getCharset());
+        ProcessSink sink = ProcessSink.of(output, dir, getCharset(), getLineSeparator());
         source.copyTo(sink);
     }
 }
