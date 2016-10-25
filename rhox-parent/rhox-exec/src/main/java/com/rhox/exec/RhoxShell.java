@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.lang.ProcessBuilder.Redirect;
+import static java.lang.System.out;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,16 +18,12 @@ import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
 /**
- * A combination of a process-execution library and a file handler used for easier scripting.<br/>
+ * A combination of a process-execution library and a file handler used for
+ * easier scripting.<br/>
  *
  * @author giese
  */
-public class RhoxShell {
-
-    /**
-     * Marker, used to identify a redirected error stream.
-     */
-    private static final Object REDIRECT_ERR = new Object();
+public class RhoxShell extends AbstractShell {
 
     private static final String LN = System.getProperty("line.separator");
     private static final Path USER_DIR = Paths.get(System.getProperty("user.dir"));
@@ -34,8 +31,8 @@ public class RhoxShell {
     private Path dir = USER_DIR;
 
     /**
-     * The line separator used by the external process. Used especially for sending piped input to the process, but
-     * ignored in most other cases.
+     * The line separator used by the external process. Used especially for
+     * sending piped input to the process, but ignored in most other cases.
      */
     private String lineSeparator = LN;
 
@@ -44,17 +41,11 @@ public class RhoxShell {
      */
     private Charset charset = Charset.defaultCharset();
 
-    private Object in;
-
-    private Object out;
-
-    private Object err;
-
     /**
-     * Modifies the working directory for all processes started afterwards. Setting it to null will restore the default.
+     * Modifies the working directory for all processes started afterwards.
+     * Setting it to null will restore the default.
      *
-     * @param the
-     *            work dir
+     * @param the work dir
      */
     public void setDir(String dir) {
         if (dir == null) {
@@ -67,7 +58,8 @@ public class RhoxShell {
     }
 
     /**
-     * the currently set directory, or null if the default workdir should be used.
+     * the currently set directory, or null if the default workdir should be
+     * used.
      */
     public String getDir() {
         return dir == null ? null : dir.toString();
@@ -89,87 +81,57 @@ public class RhoxShell {
         return charset;
     }
 
-    public Object getIn() {
-        return in;
+    public int exec(String command) throws InterruptedException {
+        return exec(command, null);
     }
 
-    public void setIn(Object in) {
-        this.in = in;
+    public int exec(String command, ProcessConfig config) throws InterruptedException {
+        return exec(toArgs(command), config);
     }
 
-    public void setOut(Object out) {
-        this.out = out;
+    public int exec(List<String> command) throws InterruptedException {
+        return exec(command, null);
     }
 
-    public Object getOut() {
-        return out;
-    }
-
-    public void setErr(Object err) {
-        this.err = err;
-    }
-
-    public Object getErr() {
-        return err;
-    }
-
-    /**
-     * If called, then err is redirected to the output stream.<br/>
-     * This will overwrite any set error value.
-     */
-    public void redirectErr() {
-        this.err = REDIRECT_ERR;
-    }
-
-    /**
-     * Creates the appropiate redirect, dependening on the target type.
-     */
-    private static Redirect createRedirect(Object target, boolean read) {
-        if (target instanceof Path) {
-            File f = ((Path) target).toFile();
-            return read ? Redirect.from(f) : Redirect.appendTo(f);
-        }
-        return target != null ? Redirect.PIPE : Redirect.INHERIT;
+    public int exec(List<String> command, ProcessConfig config) throws InterruptedException {
+        return start(command, config).waitFor();
     }
 
     /**
      * Starts a new Process from the commandline.
      */
-    public Process start(String command) {
-        return start(toArgs(command));
+    public RhoxProcess start(String command) {
+        return start(command, null);
+    }
+
+    public RhoxProcess start(String command, ProcessConfig config) {
+        return start(toArgs(command), config);
+    }
+
+    public RhoxProcess start(List<?> command) {
+        return start(command, null);
     }
 
     /**
-     * Converts the command into an List-based args using the same implementation as Runtime.exec().
+     * Starts a new Process from the commandline. The command is derived from
+     * the arguments, all of them are converted to strings, if necessary.
      */
-    private List<String> toArgs(String command) {
-        StringTokenizer st = new StringTokenizer(command);
-        String[] cmdarray = new String[st.countTokens()];
-        for (int i = 0; st.hasMoreTokens(); i++) {
-            cmdarray[i] = st.nextToken();
-        }
-        return Arrays.asList(cmdarray);
-    }
-
-    /**
-     * Starts a new Process from the commandline. The command is derived from the arguments, all of them are converted
-     * to strings, if necessary.
-     */
-    public Process start(List<?> command) {
+    public RhoxProcess start(List<?> command, ProcessConfig config) {
+        config = config == null ? this.config : this.config.merge(config);
         List<String> args = command.stream().map(Objects::toString).collect(Collectors.toList());
         ProcessBuilder processBuilder = new ProcessBuilder(args);
         if (dir != null) {
             processBuilder.directory(dir.toFile());
         }
-        Redirect rIn = createRedirect(in, true);
+        Redirect rIn = createRedirect(config.getIn(), true);
         processBuilder.redirectInput(rIn);
 
-        Redirect rOut = createRedirect(out, false);
+        Redirect rOut = createRedirect(config.getOut(), false);
         processBuilder.redirectOutput(rOut);
 
         Redirect rErr;
-        if (err != REDIRECT_ERR) {
-            rErr = createRedirect(err, false);
+        if (config.getRedirectErr()) {
+            rErr = createRedirect(config.getErr(), false);
             processBuilder.redirectError(rErr);
         } else {
             rErr = null;
@@ -183,15 +145,46 @@ public class RhoxShell {
             throw new UncheckedIOException(ioe);
         }
         if (rIn == Redirect.PIPE) {
-            startInputThread("ProcessInput", in, process.getOutputStream());
+            startInputThread("ProcessInput", config.getIn(), process.getOutputStream());
         }
         if (rOut == Redirect.PIPE) {
-            startOutputThread("ProcessOutput", out, process.getInputStream());
+            startOutputThread("ProcessOutput", config.getOut(), process.getInputStream());
         }
         if (rErr == Redirect.PIPE) {
-            startOutputThread("ProcessError", err, process.getErrorStream());
+            startOutputThread("ProcessError", config.getErr(), process.getErrorStream());
         }
-        return process;
+        return new RhoxProcess(process, charset, lineSeparator);
+    }
+
+    /**
+     * Converts the command into an List-based args using the same
+     * implementation as Runtime.exec().
+     */
+    private List<String> toArgs(String command) {
+        StringTokenizer st = new StringTokenizer(command);
+        String[] cmdarray = new String[st.countTokens()];
+        for (int i = 0; st.hasMoreTokens(); i++) {
+            cmdarray[i] = st.nextToken();
+        }
+        return Arrays.asList(cmdarray);
+    }
+
+    /**
+     * Creates the appropiate redirect, dependening on the target type.
+     */
+    private static Redirect createRedirect(Object target, boolean read) {
+        if (target instanceof Redirect) {
+            return (Redirect) target;
+        }
+        if (target instanceof Path) {
+            Path f = (Path) target;
+            return read ? ProcessRedirect.from(f) : ProcessRedirect.to(f);
+        }
+        if (target instanceof File) {
+            File f = (File) target;
+            return read ? ProcessRedirect.from(f) : ProcessRedirect.to(f);
+        }
+        return ProcessRedirect.PIPE;
     }
 
     private void startInputThread(String name, Object input, OutputStream out) {
@@ -204,18 +197,6 @@ public class RhoxShell {
         StreamSource source = new StreamSource(in, charset);
         ProcessSink sink = ProcessSink.of(out, dir, charset, lineSeparator);
         new Thread(() -> source.copyTo(sink), name).start();
-    }
-
-    public int exec(String command) {
-        return exec(toArgs(command));
-    }
-
-    public int exec(List<String> command) {
-        try {
-            return start(command).waitFor();
-        } catch (InterruptedException unexpected) {
-            throw new IllegalStateException(unexpected);
-        }
     }
 
     /**
