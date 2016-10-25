@@ -47,10 +47,11 @@ public class RhoxShellTest {
     }
 
     /**
-     * This needs further discussion: Is appending always the best choice, or only for output and error? Or maybe not
-     * even then?
+     * This needs further discussion: Is appending always the best choice, or
+     * only for output and error? Or maybe not even then?
      * <p>
-     * Matters for files and collections, not for streams (which cannot be rewinded)
+     * Matters for files and collections, not for streams (which cannot be
+     * rewinded)
      */
     @Test
     public void copyAlwaysAppends() {
@@ -60,6 +61,15 @@ public class RhoxShellTest {
         assertThat(l2).isEqualTo(l1);
         sh.copy(f1, l2);
         assertThat(l2.size()).isGreaterThan(l1.size());
+    }
+
+    @Test
+    public void execEcho() throws Exception {
+        StringBuilder out = new StringBuilder();
+        sh.setOut(out);
+        int rc = sh.exec("cmd /c echo hello");
+        assertThat(rc).isEqualTo(0);
+        assertThat(out.toString().trim()).isEqualTo("hello");
     }
 
 }

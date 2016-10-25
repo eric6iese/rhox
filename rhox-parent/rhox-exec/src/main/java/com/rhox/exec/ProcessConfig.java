@@ -6,6 +6,7 @@
 package com.rhox.exec;
 
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -27,6 +28,8 @@ public class ProcessConfig implements Cloneable {
      * Marker, used to identify a redirected error stream.
      */
     private Boolean redirectErr;
+
+    private Path dir;
 
     /**
      * The line separator used by the external process. Used especially for
@@ -68,11 +71,23 @@ public class ProcessConfig implements Cloneable {
      * This will overwrite any set error value.
      */
     public void setRedirectErr(Boolean redirectErr) {
-        this.err = true;
+        this.redirectErr = redirectErr;
     }
 
     public Boolean getRedirectErr() {
         return redirectErr;
+    }
+
+    public void setDir(Object dir) {
+        this.dir = ProcessUtils.toPath(dir);
+    }
+
+    /**
+     * the currently set directory, or null if the default workdir should be
+     * used.
+     */
+    public Path getDir() {
+        return dir;
     }
 
     public void setLineSeparator(String lineSeparator) {
@@ -83,8 +98,11 @@ public class ProcessConfig implements Cloneable {
         return lineSeparator;
     }
 
-    public void setCharset(Charset charset) {
-        this.charset = charset;
+    public void setCharset(Object charset) {
+        if (charset instanceof CharSequence) {
+            charset = Charset.forName(charset.toString());
+        }
+        this.charset = (Charset) charset;
     }
 
     public Charset getCharset() {

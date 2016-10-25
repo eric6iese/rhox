@@ -13,6 +13,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
+import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -26,7 +27,7 @@ public class RhoxProcess extends Process {
 
     static {
         try {
-            LINE_SEPARATOR_FIELD = BufferedWriter.class.getField("lineSeparator");
+            LINE_SEPARATOR_FIELD = BufferedWriter.class.getDeclaredField("lineSeparator");
             LINE_SEPARATOR_FIELD.setAccessible(true);
         } catch (NoSuchFieldException unexpected) {
             throw new UnsupportedOperationException(unexpected);
@@ -36,21 +37,31 @@ public class RhoxProcess extends Process {
     private final Process process;
     private final Charset charset;
     private final String lineSeparator;
+    private final Iterator<Thread> threads;
 
-    RhoxProcess(Process process, Charset charset, String lineSeparator) {
+    RhoxProcess(Process process, Iterator<Thread> threads, Charset charset, String lineSeparator) {
         this.process = process;
+        this.threads = threads;
         this.charset = charset;
         this.lineSeparator = lineSeparator;
     }
 
     @Override
     public int waitFor() throws InterruptedException {
+        waitForThreads();
         return process.waitFor();
     }
 
     @Override
     public boolean waitFor(long timeout, TimeUnit unit) throws InterruptedException {
+        waitForThreads();
         return process.waitFor(timeout, unit);
+    }
+
+    private void waitForThreads() throws InterruptedException {
+        while (threads.hasNext()) {
+            threads.next().join();
+        }
     }
 
     @Override

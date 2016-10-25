@@ -1,6 +1,7 @@
 package com.rhox.exec;
 
 import java.io.File;
+import java.io.Flushable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -47,24 +48,13 @@ abstract class ProcessSink {
     }
 
     static LineWriter asLineWriter(Appendable appendable, String lineSeparator) {
-        if (appendable instanceof Writer) {
-            return asLineWriter((Writer) appendable, lineSeparator);
-        }
         return line -> {
             try {
-                appendable.append(line).append(lineSeparator);
-            } catch (IOException ioe) {
-                throw new UncheckedIOException(ioe);
-            }
-        };
-    }
-
-    private static LineWriter asLineWriter(Writer writer, String lineSeparator) {
-        return line -> {
-            try {
-                writer.write(line);
-                writer.write(lineSeparator);
-                writer.flush();
+                appendable.append(line);
+                appendable.append(lineSeparator);
+                if (appendable instanceof Flushable) {
+                    ((Flushable) appendable).flush();
+                }
             } catch (IOException ioe) {
                 throw new UncheckedIOException(ioe);
             }

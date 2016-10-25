@@ -6,6 +6,7 @@
 package com.rhox.exec;
 
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -13,8 +14,6 @@ import static java.util.Objects.requireNonNull;
  * @author giese
  */
 public class AbstractShell {
-
-    private static final String LN = System.getProperty("line.separator");
 
     protected final ProcessConfig config;
 
@@ -24,7 +23,8 @@ public class AbstractShell {
         config.setOut(ProcessRedirect.INHERIT);
         config.setErr(ProcessRedirect.INHERIT);
         config.setRedirectErr(false);
-        config.setLineSeparator(LN);
+        config.setDir(ProcessUtils.USER_DIR);
+        config.setLineSeparator(ProcessUtils.LINE_SEPARATOR);
         config.setCharset(Charset.defaultCharset());
     }
 
@@ -60,6 +60,14 @@ public class AbstractShell {
         return config.getRedirectErr();
     }
 
+    public void setDir(Object dir) {
+        config.setDir(requireNonNull(dir, "dir"));
+    }
+
+    public Path getDir() {
+        return config.getDir();
+    }
+
     public void setLineSeparator(String lineSeparator) {
         config.setLineSeparator(requireNonNull(lineSeparator, "lineSeparator"));
     }
@@ -68,7 +76,7 @@ public class AbstractShell {
         return config.getLineSeparator();
     }
 
-    public void setCharset(Charset charset) {
+    public void setCharset(Object charset) {
         config.setCharset(requireNonNull(charset, "charset"));
     }
 
