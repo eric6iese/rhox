@@ -13,7 +13,7 @@ import static java.util.Objects.requireNonNull;
  *
  * @author giese
  */
-public class AbstractShell {
+public class AbstractShell implements ProcessContext {
 
     protected final ProcessConfig config;
 
@@ -28,60 +28,73 @@ public class AbstractShell {
         config.setCharset(Charset.defaultCharset());
     }
 
+    @Override
     public Object getIn() {
         return config.getIn();
     }
 
+    @Override
     public void setIn(Object in) {
         config.setIn(requireNonNull(in, "in"));
     }
 
+    @Override
     public void setOut(Object out) {
         config.setOut(requireNonNull(out, "out"));
     }
 
+    @Override
     public Object getOut() {
         return config.getOut();
     }
 
+    @Override
     public void setErr(Object err) {
         config.setErr(requireNonNull(err, "err"));
     }
 
+    @Override
     public Object getErr() {
         return config.getErr();
     }
 
-    public void setRedirectErr(boolean redirectErr) {
-        config.setRedirectErr(redirectErr);
+    @Override
+    public void setRedirectErr(Boolean redirectErr) {
+        config.setRedirectErr(requireNonNull(redirectErr, "redirectErr"));
     }
 
-    public boolean isRedirectErr() {
+    @Override
+    public Boolean getRedirectErr() {
         return config.getRedirectErr();
     }
 
+    @Override
     public void setDir(Object dir) {
         config.setDir(requireNonNull(dir, "dir"));
     }
 
+    @Override
     public Path getDir() {
         return config.getDir();
     }
 
+    @Override
     public void setLineSeparator(String lineSeparator) {
         config.setLineSeparator(requireNonNull(lineSeparator, "lineSeparator"));
     }
 
+    @Override
     public String getLineSeparator() {
         return config.getLineSeparator();
     }
 
+    @Override
     public void setCharset(Object charset) {
         config.setCharset(requireNonNull(charset, "charset"));
     }
 
+    @Override
     public Charset getCharset() {
         return config.getCharset();
     }
-
 }

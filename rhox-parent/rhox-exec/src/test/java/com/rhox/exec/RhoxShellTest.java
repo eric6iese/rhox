@@ -1,16 +1,24 @@
 package com.rhox.exec;
 
-import java.io.BufferedReader;
+import static com.rhox.exec.ProcessUtils.LINE_SEPARATOR;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertNull;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringReader;
+import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import static org.junit.Assert.assertNull;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -34,6 +42,7 @@ public class RhoxShellTest {
     public void before() throws IOException {
         Files.write(f1, s1.getBytes());
         Files.write(f2, s2.getBytes());
+        sh.setDir(TestPrograms.DIR);
     }
 
     @Test
@@ -50,11 +59,10 @@ public class RhoxShellTest {
     }
 
     /**
-     * This needs further discussion: Is appending always the best choice, or
-     * only for output and error? Or maybe not even then?
+     * This needs further discussion: Is appending always the best choice, or only for output and error? Or maybe not
+     * even then?
      * <p>
-     * Matters for files and collections, not for streams (which cannot be
-     * rewinded)
+     * Matters for files and collections, not for streams (which cannot be rewinded)
      */
     @Test
     public void copyAlwaysAppends() {
@@ -66,23 +74,85 @@ public class RhoxShellTest {
         assertThat(l2.size()).isGreaterThan(l1.size());
     }
 
+    private List<String> cmdOut = Stream.concat(TestPrograms.CMD_OUT.stream(), Stream.of("hello"))
+            .collect(Collectors.toList());
+    private String cmdOutResult = "hello";
+
     @Test
     public void execEcho() throws Exception {
         StringBuilder out = new StringBuilder();
         sh.setOut(out);
-        int rc = sh.exec("cmd /c echo hello");
+        int rc = sh.exec(cmdOut);
         assertThat(rc).isEqualTo(0);
-        assertThat(out.toString().trim()).isEqualTo("hello");
+        assertThat(out.toString().trim()).isEqualTo(cmdOutResult);
     }
 
     @Test
     public void pipeEcho() throws Exception {
         sh.setOut(ProcessRedirect.PIPE);
-        RhoxProcess proc = sh.start("cmd /c echo hello");
+        RhoxProcess proc = sh.start(cmdOut);
         BufferedReader br = proc.getReader();
         String out = br.readLine();
         assertNull(br.readLine());
         assertThat(proc.waitForOrDestroy(1000, TimeUnit.SECONDS)).isEqualTo(0);
-        assertThat(out).isEqualTo("hello");
+        assertThat(out).isEqualTo(cmdOutResult);
+    }
+
+    @Test
+    public void echoFile() throws Exception {
+        sh.setOut(f1);
+        sh.exec(cmdOut);
+        String out = Files.readAllLines(f1).stream().collect(Collectors.joining());
+        assertThat(out).isEqualTo(cmdOutResult);
+    }
+
+    @Test
+    public void customConfigWins() throws Exception {
+        sh.setOut(f1);
+        ProcessConfig cfg = new ProcessConfig();
+        StringBuilder out = new StringBuilder();
+        cfg.setOut(out);
+        sh.exec(cmdOut, cfg);
+        assertThat(out.toString().trim()).isEqualTo(cmdOutResult);
+        assertThat(f1).hasContent(s1);
+    }
+
+    private List<String> cmdIn = TestPrograms.CMD_IN;
+    private List<String> cmdInInput = Arrays.asList("b", "a", "c", "k");
+    private String cmdInInputString = cmdInInput.stream().collect(Collectors.joining(LINE_SEPARATOR));
+    private List<String> cmdInResult = Arrays.asList("a", "b", "c", "k");
+
+    @Test
+    public void cmdInString() throws Exception {
+        testCmdIn(cmdInInputString);
+    }
+
+    @Test
+    public void cmdInReader() throws Exception {
+        testCmdIn(new StringReader(cmdInInputString));
+    }
+
+    @Test
+    public void cmdInStream() throws Exception {
+        testCmdIn(new ByteArrayInputStream(cmdInInputString.getBytes()));
+    }
+
+    @Test
+    public void cmdInPipe() throws Exception {
+        sh.setIn(Redirect.PIPE);
+        sh.setOut(new ArrayList<>());
+        RhoxProcess proc = sh.start(cmdIn);
+        try (PrintWriter writer = proc.getWriter()) {
+            cmdInInput.forEach(writer::println);
+        }
+        proc.waitFor();
+        assertThat(sh.getOut()).isEqualTo(cmdInResult);
+    }
+
+    private void testCmdIn(Object input) throws Exception {
+        sh.setIn(cmdInInput);
+        sh.setOut(new ArrayList<>());
+        sh.exec(cmdIn);
+        assertThat(sh.getOut()).isEqualTo(cmdInResult);
     }
 }

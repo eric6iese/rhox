@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -12,14 +11,11 @@ import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
 /**
- * A combination of a process-execution library and a file handler used for
- * easier scripting.<br/>
+ * A combination of a process-execution library and a file handler used for easier scripting.<br/>
  *
  * @author giese
  */
 public class RhoxShell extends AbstractShell {
-
-    private static final Path USER_DIR = Paths.get(System.getProperty("user.dir"));
 
     public int exec(String command) throws InterruptedException {
         return exec(command, null);
@@ -53,8 +49,8 @@ public class RhoxShell extends AbstractShell {
     }
 
     /**
-     * Starts a new Process from the commandline. The command is derived from
-     * the arguments, all of them are converted to strings, if necessary.
+     * Starts a new Process from the commandline. The command is derived from the arguments, all of them are converted
+     * to strings, if necessary.
      */
     public RhoxProcess start(List<?> command, ProcessConfig config) {
         List<String> args = command.stream().map(Objects::toString).collect(Collectors.toList());
@@ -63,8 +59,7 @@ public class RhoxShell extends AbstractShell {
     }
 
     /**
-     * Converts the command into an List-based args using the same
-     * implementation as Runtime.exec().
+     * Converts the command into an List-based args using the same implementation as Runtime.exec().
      */
     private static List<String> toArgs(String command) {
         StringTokenizer st = new StringTokenizer(command);

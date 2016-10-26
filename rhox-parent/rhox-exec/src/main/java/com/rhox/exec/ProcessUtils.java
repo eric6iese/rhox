@@ -5,13 +5,14 @@
  */
 package com.rhox.exec;
 
+import static java.lang.ProcessBuilder.Redirect.PIPE;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.lang.ProcessBuilder.Redirect;
-import static java.lang.ProcessBuilder.Redirect.PIPE;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -27,8 +28,8 @@ import java.util.concurrent.TimeUnit;
  */
 final class ProcessUtils {
 
-    public static final String LINE_SEPARATOR = System.getProperty("line.separator");
-    public static final String USER_DIR = System.getProperty("user.dir");
+    static final String LINE_SEPARATOR = System.getProperty("line.separator");
+    static final String USER_DIR = System.getProperty("user.dir");
 
     private static ExecutorService EXEC = Executors.newCachedThreadPool();
 
@@ -40,12 +41,12 @@ final class ProcessUtils {
             } catch (InterruptedException ignored) {
                 // Cannot handle during shutdown!
             }
-        }, "ExecutionShutdown"));
+        } , "ExecutionShutdown"));
     }
 
     /**
-     * Starts a new Process from the commandline. The command is derived from
-     * the arguments, all of them are converted to strings, if necessary.
+     * Starts a new Process from the commandline. The command is derived from the arguments, all of them are converted
+     * to strings, if necessary.
      */
     public static RhoxProcess start(List<String> args, ProcessConfig config) {
         ProcessBuilder processBuilder = new ProcessBuilder(args);
@@ -105,7 +106,8 @@ final class ProcessUtils {
                 threads.add(startOutputThread(config, error, process.getErrorStream()));
             }
         }
-        return new RhoxProcess(process, in, out, err, threads.iterator(), config.getCharset(), config.getLineSeparator());
+        return new RhoxProcess(process, in, out, err, threads.iterator(), config.getCharset(),
+                config.getLineSeparator());
     }
 
     /**
@@ -128,14 +130,25 @@ final class ProcessUtils {
 
     private static Future<?> startInputThread(ProcessConfig config, Object input, OutputStream out) {
         ProcessSource source = ProcessSource.of(input, config.getDir(), config.getCharset());
-        StreamSink sink = new StreamSink(out, config.getCharset(), config.getLineSeparator());
-        return EXEC.submit(() -> source.copyTo(sink));
+        return EXEC.submit(() -> {
+            try (OutputStream os = out) {
+                StreamSink sink = new StreamSink(os, config.getCharset(), config.getLineSeparator());
+                source.copyTo(sink);
+            }
+            return null;
+        });
     }
 
     private static Future<?> startOutputThread(ProcessConfig config, Object output, InputStream in) {
-        StreamSource source = new StreamSource(in, config.getCharset());
+
         ProcessSink sink = ProcessSink.of(output, config.getDir(), config.getCharset(), config.getLineSeparator());
-        return EXEC.submit(() -> source.copyTo(sink));
+        return EXEC.submit(() -> {
+            try (InputStream is = in) {
+                StreamSource source = new StreamSource(is, config.getCharset());
+                source.copyTo(sink);
+            }
+            return null;
+        });
     }
 
     public static Path toPath(Object file) {
