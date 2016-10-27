@@ -1,19 +1,12 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.rhox.exec;
 
 import java.nio.charset.Charset;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Allows it to customize some config attributes when running from within the
- * shell (or from the outside)
+ * Allows it to customize some config attributes when running from within the shell (or from the outside)
  *
  * @author giese
  */
@@ -33,8 +26,8 @@ public class ProcessConfig implements Cloneable, ProcessContext {
     private Path dir;
 
     /**
-     * The line separator used by the external process. Used especially for
-     * sending piped input to the process, but ignored in most other cases.
+     * The line separator used by the external process. Used especially for sending piped input to the process, but
+     * ignored in most other cases.
      */
     private String lineSeparator;
 
@@ -93,8 +86,7 @@ public class ProcessConfig implements Cloneable, ProcessContext {
     }
 
     /**
-     * the currently set directory, or null if the default workdir should be
-     * used.
+     * the currently set directory, or null if the default workdir should be used.
      */
     @Override
     public Path getDir() {
@@ -134,12 +126,12 @@ public class ProcessConfig implements Cloneable, ProcessContext {
     }
 
     /**
-     * Uses this configuration as the base to create a new one where all
-     * non-null-values of the given are applied.
+     * Uses this configuration as the base to create a new one where all non-null-values of the given are applied.
      */
-    protected ProcessConfig merge(ProcessConfig in) {
+    protected ProcessConfig merge(ProcessContext in) {
         ProcessConfig cfg = clone();
         if (in != null) {
+            merge(in::getDir, cfg::setDir);
             merge(in::getIn, cfg::setIn);
             merge(in::getOut, cfg::setOut);
             merge(in::getErr, cfg::setErr);

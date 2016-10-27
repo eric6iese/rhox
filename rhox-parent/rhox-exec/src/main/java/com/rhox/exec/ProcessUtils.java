@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.rhox.exec;
 
 import static java.lang.ProcessBuilder.Redirect.PIPE;
@@ -48,28 +43,29 @@ final class ProcessUtils {
      * Starts a new Process from the commandline. The command is derived from the arguments, all of them are converted
      * to strings, if necessary.
      */
-    public static RhoxProcess start(List<String> args, ProcessConfig config) {
+    public static RhoxProcess start(List<String> args, ProcessContext config) {
         ProcessBuilder processBuilder = new ProcessBuilder(args);
         if (config.getDir() != null) {
             processBuilder.directory(config.getDir().toFile());
         }
-        Object input = config.getIn();
-        Object output = config.getOut();
-        Object error = config.getErr();
 
+        Object input = config.getIn();
         ProcessBuilder.Redirect rIn = createRedirect(input, true);
         processBuilder.redirectInput(rIn);
 
+        Object output = config.getOut();
         ProcessBuilder.Redirect rOut = createRedirect(output, false);
         processBuilder.redirectOutput(rOut);
 
+        Object error = config.getErr();
+        Boolean redirectErr = config.getRedirectErr();
         ProcessBuilder.Redirect rErr;
-        if (config.getRedirectErr()) {
-            rErr = createRedirect(error, false);
-            processBuilder.redirectError(rErr);
-        } else {
+        if (redirectErr != null && redirectErr) {
             rErr = null;
             processBuilder.redirectErrorStream(true);
+        } else {
+            rErr = createRedirect(error, false);
+            processBuilder.redirectError(rErr);
         }
 
         Process process;
@@ -128,7 +124,7 @@ final class ProcessUtils {
         return ProcessRedirect.PIPE;
     }
 
-    private static Future<?> startInputThread(ProcessConfig config, Object input, OutputStream out) {
+    private static Future<?> startInputThread(ProcessContext config, Object input, OutputStream out) {
         ProcessSource source = ProcessSource.of(input, config.getDir(), config.getCharset());
         return EXEC.submit(() -> {
             try (OutputStream os = out) {
@@ -139,7 +135,7 @@ final class ProcessUtils {
         });
     }
 
-    private static Future<?> startOutputThread(ProcessConfig config, Object output, InputStream in) {
+    private static Future<?> startOutputThread(ProcessContext config, Object output, InputStream in) {
 
         ProcessSink sink = ProcessSink.of(output, config.getDir(), config.getCharset(), config.getLineSeparator());
         return EXEC.submit(() -> {

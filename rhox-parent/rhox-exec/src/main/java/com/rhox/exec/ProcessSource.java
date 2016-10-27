@@ -15,7 +15,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Supplier;
+
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 abstract class ProcessSource {
 
@@ -37,6 +40,15 @@ abstract class ProcessSource {
         }
 
         // Character Data
+        // --> Nashorn
+        if (input instanceof ScriptObjectMirror) {
+            ScriptObjectMirror js = (ScriptObjectMirror) input;
+            if (js.isArray()) {
+                input = js.to(List.class);
+            } else if (js.isFunction()) {
+                input = js.to(Supplier.class);
+            }
+        }
         if (input instanceof CharSequence) {
             return new LineSource((CharSequence) input);
         }
@@ -63,16 +75,14 @@ abstract class ProcessSource {
     }
 
     /**
-     * Copies all data from an input streamlike resource to the output
-     * streamlike resource. Used for piped-io with processes.<br/>
-     * Please note that this method currently is entirely focussed on char-data
-     * and cannot cope with binary data in any way. Neither line-endings on
-     * different os'es or charsets are supported, instead always the system
-     * default is used. That's by design for now...
+     * Copies all data from an input streamlike resource to the output streamlike resource. Used for piped-io with
+     * processes.<br/>
+     * Please note that this method currently is entirely focussed on char-data and cannot cope with binary data in any
+     * way. Neither line-endings on different os'es or charsets are supported, instead always the system default is
+     * used. That's by design for now...
      * <p>
-     * Note as well that is implementation is horribly slow as it is, but this
-     * really shouldn't matter here, since this will rarely be the bottleneck in
-     * the IPC.
+     * Note as well that is implementation is horribly slow as it is, but this really shouldn't matter here, since this
+     * will rarely be the bottleneck in the IPC.
      */
     public void copyTo(ProcessSink output) {
         if (output instanceof PathSink) {

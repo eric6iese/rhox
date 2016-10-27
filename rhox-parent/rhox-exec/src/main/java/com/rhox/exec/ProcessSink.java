@@ -11,7 +11,10 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
+
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 abstract class ProcessSink {
 
@@ -30,6 +33,32 @@ abstract class ProcessSink {
         }
 
         // Character Data
+
+        // --> Nashorn Conversions. Note that everything within is automatically synchronized,
+        // to make up for Nashorn's complete lack of these constructs
+        if (output instanceof ScriptObjectMirror) {
+            // Converts the output to javascript
+            ScriptObjectMirror js = (ScriptObjectMirror) output;
+            if (js.isArray()) {
+                @SuppressWarnings("unchecked")
+                List<String> list = js.to(List.class);
+                Consumer<String> consumer = line -> {
+                    synchronized (js) {
+                        list.add(line);
+                    }
+                };
+                return new LineWriterSink(consumer);
+            } else if (js.isFunction()) {
+                @SuppressWarnings("unchecked")
+                Consumer<String> jsConsumer = js.to(Consumer.class);
+                Consumer<String> consumer = line -> {
+                    synchronized (js) {
+                        jsConsumer.accept(line);
+                    }
+                };
+                return new LineWriterSink(consumer);
+            }
+        }
         if (output instanceof Collection) {
             @SuppressWarnings("unchecked")
             Collection<String> collection = (Collection<String>) output;

@@ -1,18 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.rhox.exec;
 
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.InterruptedIOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.concurrent.ExecutionException;
@@ -36,7 +25,8 @@ public class RhoxProcess extends Process {
     private final String lineSeparator;
     private final Iterator<Future<?>> threads;
 
-    RhoxProcess(Process process, OutputStream in, InputStream out, InputStream err, Iterator<Future<?>> threads, Charset charset, String lineSeparator) {
+    RhoxProcess(Process process, OutputStream in, InputStream out, InputStream err, Iterator<Future<?>> threads,
+            Charset charset, String lineSeparator) {
         this.process = process;
         this.in = in;
         this.out = out;
@@ -58,12 +48,16 @@ public class RhoxProcess extends Process {
         return process.waitFor(timeout, unit);
     }
 
-    public int waitForOrDestroy(long timeout, TimeUnit unit) throws InterruptedException {
+    public int waitForOrKill(long timeout, TimeUnit unit) throws InterruptedException {
         waitFor(timeout, unit);
         if (isAlive()) {
             destroy();
         }
         return exitValue();
+    }
+
+    public int waitForOrKill(long millis) throws InterruptedException {
+        return waitForOrKill(millis, TimeUnit.MILLISECONDS);
     }
 
     private void waitForThreads() {
@@ -123,38 +117,23 @@ public class RhoxProcess extends Process {
     }
 
     /**
-     * Gets the piped PrinterWriter which can be used to send output to the
-     * stream.
+     * Gets the piped PrinterWriter which can be used to send output to the stream.
      */
-    public PrintWriter getWriter() {
-        return new PrintWriter(new OutputStreamWriter(getOutputStream(), charset), true) {
-            @Override
-            public void println() {
-                try {
-                    synchronized (lock) {
-                        out.write(lineSeparator);
-                        out.flush();
-                    }
-                } catch (InterruptedIOException x) {
-                    Thread.currentThread().interrupt();
-                } catch (IOException x) {
-                    setError();
-                }
-            }
-        };
+    public ProcessWriter getIn() {
+        return new ProcessWriter(getOutputStream(), charset, lineSeparator);
     }
 
     /**
      * Gets the piped reader for the output.
      */
-    public BufferedReader getReader() {
-        return new BufferedReader(new InputStreamReader(getInputStream(), charset));
+    public ProcessReader getOut() {
+        return new ProcessReader(getInputStream(), charset);
     }
 
     /**
      * Gets the piped reader for the error output.
      */
-    public BufferedReader getErrorReader() {
-        return new BufferedReader(new InputStreamReader(getErrorStream(), charset));
+    public ProcessReader getErr() {
+        return new ProcessReader(getErrorStream(), charset);
     }
 }

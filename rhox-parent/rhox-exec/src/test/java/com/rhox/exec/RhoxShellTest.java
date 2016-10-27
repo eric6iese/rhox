@@ -91,10 +91,10 @@ public class RhoxShellTest {
     public void pipeEcho() throws Exception {
         sh.setOut(ProcessRedirect.PIPE);
         RhoxProcess proc = sh.start(cmdOut);
-        BufferedReader br = proc.getReader();
+        BufferedReader br = proc.getOut();
         String out = br.readLine();
         assertNull(br.readLine());
-        assertThat(proc.waitForOrDestroy(1000, TimeUnit.SECONDS)).isEqualTo(0);
+        assertThat(proc.waitForOrKill(1000, TimeUnit.SECONDS)).isEqualTo(0);
         assertThat(out).isEqualTo(cmdOutResult);
     }
 
@@ -142,7 +142,7 @@ public class RhoxShellTest {
         sh.setIn(Redirect.PIPE);
         sh.setOut(new ArrayList<>());
         RhoxProcess proc = sh.start(cmdIn);
-        try (PrintWriter writer = proc.getWriter()) {
+        try (PrintWriter writer = proc.getIn()) {
             cmdInInput.forEach(writer::println);
         }
         proc.waitFor();

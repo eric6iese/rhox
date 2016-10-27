@@ -1,19 +1,15 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.rhox.exec;
+
+import static java.util.Objects.requireNonNull;
 
 import java.nio.charset.Charset;
 import java.nio.file.Path;
-import static java.util.Objects.requireNonNull;
 
 /**
  *
  * @author giese
  */
-public class AbstractShell implements ProcessContext {
+class AbstractShell implements ProcessContext {
 
     protected final ProcessConfig config;
 

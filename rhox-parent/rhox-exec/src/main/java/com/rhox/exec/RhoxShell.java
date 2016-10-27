@@ -40,7 +40,7 @@ public class RhoxShell extends AbstractShell {
         return start(command, null);
     }
 
-    public RhoxProcess start(String command, ProcessConfig config) {
+    public RhoxProcess start(String command, ProcessContext config) {
         return start(toArgs(command), config);
     }
 
@@ -52,7 +52,7 @@ public class RhoxShell extends AbstractShell {
      * Starts a new Process from the commandline. The command is derived from the arguments, all of them are converted
      * to strings, if necessary.
      */
-    public RhoxProcess start(List<?> command, ProcessConfig config) {
+    public RhoxProcess start(List<?> command, ProcessContext config) {
         List<String> args = command.stream().map(Objects::toString).collect(Collectors.toList());
         config = config == null ? this.config : this.config.merge(config);
         return ProcessUtils.start(args, config);
