@@ -28,8 +28,8 @@ public class JsTest {
     @Before
     public void setup() throws Exception {
         String script = Files.lines(f).collect(Collectors.joining(LINE_SEPARATOR));
-        eval("var exports = {};", "var module = { exports: exports };",
-                script.substring(script.indexOf("var RhoxShell")), "var shell = module.exports;",
+        script = script.replace("execModule.type(", "Java.type(").substring(script.indexOf("var RhoxShell"));
+        eval("var exports = {};", "var module = { exports: exports };", script, "var shell = module.exports;",
                 "var exec = shell.System.exec;", "var start = shell.System.start;", "var Redirect = shell.Redirect;",
                 "var sh = new shell.Shell();", "sh.dir = '" + dir + "'");
     }
