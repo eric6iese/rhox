@@ -29,9 +29,9 @@ public class JsTest {
     public void setup() throws Exception {
         String script = Files.lines(f).collect(Collectors.joining(LINE_SEPARATOR));
         eval("var exports = {};", "var module = { exports: exports };",
-                script.substring(script.indexOf("var RhoxShell")), "var rhox_exec = module.exports;",
-                "var exec = rhox_exec.exec;", "var start = rhox_exec.start;", "var Redirect = rhox_exec.Redirect;",
-                "var sh = new rhox_exec.Shell();", "sh.dir = '" + dir + "'");
+                script.substring(script.indexOf("var RhoxShell")), "var shell = module.exports;",
+                "var exec = shell.System.exec;", "var start = shell.System.start;", "var Redirect = shell.Redirect;",
+                "var sh = new shell.Shell();", "sh.dir = '" + dir + "'");
     }
 
     @Test
