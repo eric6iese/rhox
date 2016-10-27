@@ -7,6 +7,7 @@
         <version>0.3.0</version>
     </parent>
     <artifactId>rhox-shell</artifactId>    
+    <version>0.1.0</version>
     <name>rhox-shell</name>
     <description>Easier, script based command line execution</description>
 
