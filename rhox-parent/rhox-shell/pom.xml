@@ -6,8 +6,8 @@
         <artifactId>rhox-parent</artifactId>
         <version>0.3.0</version>
     </parent>
-    <artifactId>rhox-exec</artifactId>
-    <name>rhox-exec</name>
+    <artifactId>rhox-shell</artifactId>    
+    <name>rhox-shell</name>
     <description>Easier, script based command line execution</description>
 
     <dependencies>

@@ -18,7 +18,7 @@ import org.junit.Test;
 
 public class JsTest {
 
-    private Path f = Paths.get("src/main/javascript/exec.js");
+    private Path f = Paths.get("src/main/javascript/shell.js");
     private ScriptEngine nashorn = new ScriptEngineManager().getEngineByName("nashorn");
 
     private String dir = TestPrograms.DIR.toAbsolutePath().toString().replace("\\", "/");

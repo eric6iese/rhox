@@ -45,7 +45,7 @@
             </dependency>
             <dependency>
                 <groupId>com.rhox</groupId>
-                <artifactId>rhox-exec</artifactId>
+                <artifactId>rhox-shell</artifactId>
                 <version>${project.version}</version>
             </dependency>
             
@@ -144,6 +144,6 @@
         <module>rhox-maven</module>
         <module>rhox-test</module>
         <module>rhox-native</module>
-        <module>rhox-exec</module>
+        <module>rhox-shell</module>
     </modules>
 </project>
