@@ -6,7 +6,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Allows it to customize some config attributes when running from within the shell (or from the outside)
+ * Allows it to customize some config attributes when running from within the
+ * shell (or from the outside)
  *
  * @author giese
  */
@@ -26,8 +27,8 @@ public class ProcessConfig implements Cloneable, ProcessContext {
     private Path dir;
 
     /**
-     * The line separator used by the external process. Used especially for sending piped input to the process, but
-     * ignored in most other cases.
+     * The line separator used by the external process. Used especially for
+     * sending piped input to the process, but ignored in most other cases.
      */
     private String lineSeparator;
 
@@ -37,18 +38,8 @@ public class ProcessConfig implements Cloneable, ProcessContext {
     private Charset charset;
 
     @Override
-    public void setIn(Object in) {
-        this.in = in;
-    }
-
-    @Override
     public Object getIn() {
         return in;
-    }
-
-    @Override
-    public void setOut(Object out) {
-        this.out = out;
     }
 
     @Override
@@ -57,22 +48,8 @@ public class ProcessConfig implements Cloneable, ProcessContext {
     }
 
     @Override
-    public void setErr(Object err) {
-        this.err = err;
-    }
-
-    @Override
     public Object getErr() {
         return err;
-    }
-
-    /**
-     * If called, then err is redirected to the output stream.<br/>
-     * This will overwrite any set error value.
-     */
-    @Override
-    public void setRedirectErr(Boolean redirectErr) {
-        this.redirectErr = redirectErr;
     }
 
     @Override
@@ -80,13 +57,9 @@ public class ProcessConfig implements Cloneable, ProcessContext {
         return redirectErr;
     }
 
-    @Override
-    public void setDir(Object dir) {
-        this.dir = ProcessUtils.toPath(dir);
-    }
-
     /**
-     * the currently set directory, or null if the default workdir should be used.
+     * the currently set directory, or null if the default workdir should be
+     * used.
      */
     @Override
     public Path getDir() {
@@ -94,16 +67,34 @@ public class ProcessConfig implements Cloneable, ProcessContext {
     }
 
     @Override
-    public void setLineSeparator(String lineSeparator) {
-        this.lineSeparator = lineSeparator;
-    }
-
-    @Override
     public String getLineSeparator() {
         return lineSeparator;
     }
 
-    @Override
+    public void setIn(Object in) {
+        this.in = in;
+    }
+
+    public void setOut(Object out) {
+        this.out = out;
+    }
+
+    public void setErr(Object err) {
+        this.err = err;
+    }
+
+    public void setRedirectErr(Boolean redirectErr) {
+        this.redirectErr = redirectErr;
+    }
+
+    public void setDir(Object dir) {
+        this.dir = ProcessUtils.toPath(dir);
+    }
+
+    public void setLineSeparator(String lineSeparator) {
+        this.lineSeparator = lineSeparator;
+    }
+
     public void setCharset(Object charset) {
         if (charset instanceof CharSequence) {
             charset = Charset.forName(charset.toString());
@@ -126,7 +117,8 @@ public class ProcessConfig implements Cloneable, ProcessContext {
     }
 
     /**
-     * Uses this configuration as the base to create a new one where all non-null-values of the given are applied.
+     * Uses this configuration as the base to create a new one where all
+     * non-null-values of the given are applied.
      */
     protected ProcessConfig merge(ProcessContext in) {
         ProcessConfig cfg = clone();

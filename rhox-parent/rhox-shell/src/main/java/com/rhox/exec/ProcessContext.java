@@ -19,28 +19,13 @@ public interface ProcessContext {
 
     Object getErr();
 
+    /**
+     * If set, then err is redirected to the output stream.<br/>
+     * This will overwrite any set error value.
+     */
     Boolean getRedirectErr();
 
     String getLineSeparator();
 
     Charset getCharset();
-
-    void setDir(Object dir);
-
-    void setIn(Object in);
-
-    void setOut(Object out);
-
-    void setErr(Object err);
-
-    /**
-     * If called, then err is redirected to the output stream.<br/>
-     * This will overwrite any set error value.
-     */
-    void setRedirectErr(Boolean redirectErr);
-
-    void setLineSeparator(String lineSeparator);
-
-    void setCharset(Object charset);
-
 }

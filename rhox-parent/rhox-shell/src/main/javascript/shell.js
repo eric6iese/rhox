@@ -10,36 +10,36 @@ execModule.include(__dirname + '/lib/*.jar');
 
 var RhoxShell = execModule.type('com.rhox.exec.RhoxShell');
 var ProcessConfig = execModule.type('com.rhox.exec.ProcessConfig');
-var MapProcessContext = execModule.type('com.rhox.exec.MapProcessContext');
-var ProcessRedirect = execModule.type('com.rhox.exec.ProcessRedirect');
+var JsProcessContext = execModule.type('com.rhox.exec.MapProcessContext');
+var Redirect = execModule.type('com.rhox.exec.ProcessRedirect');
 
 /**
  * Binds all given String properties from this object to the other.
  */
 function bindProperties(_this, _that, properties) {
-    properties.forEach(function (property) {
-        Object.defineProperty(_this, property, {
-            get: function () {
-                return _that[property];
-            },
-            set: function (value) {
-                _that[property] = value;
-            }
-        });
-    });
+	properties.forEach(function(property) {
+		Object.defineProperty(_this, property, {
+			get : function() {
+				return _that[property];
+			},
+			set : function(value) {
+				_that[property] = value;
+			}
+		});
+	});
 }
 
 /**
  * Binds all given String properties for reading from this object to the other.
  */
 function bindReadonlyProperties(_this, _that, properties) {
-    properties.forEach(function (property) {
-        Object.defineProperty(_this, property, {
-            get: function () {
-                return _that[property];
-            }
-        });
-    });
+	properties.forEach(function(property) {
+		Object.defineProperty(_this, property, {
+			get : function() {
+				return _that[property];
+			}
+		});
+	});
 }
 
 /**
@@ -47,38 +47,38 @@ function bindReadonlyProperties(_this, _that, properties) {
  */
 function Process(javaProcess) {
 
-    // Properties
-    bindReadonlyProperties(this, javaProcess, ['alive', 'in', 'out', 'err']);
-    Object.defineProperty(this, 'exitValue', {
-        get: function () {
-            return javaProcess.exitValue();
-        }
-    });
+	// Properties
+	bindReadonlyProperties(this, javaProcess, [ 'alive', 'in', 'out', 'err' ]);
+	Object.defineProperty(this, 'exitValue', {
+		get : function() {
+			return javaProcess.exitValue();
+		}
+	});
 
-    /**
-     * Destroys the process.
-     */
-    this.destroy = function () {
-        javaProcess.destroy();
-    };
+	/**
+	 * Destroys the process.
+	 */
+	this.destroy = function() {
+		javaProcess.destroy();
+	};
 
-    /**
-     * Waits for the proess to terminate.
-     * 
-     * @return the exit code.
-     */
-    this.waitFor = function () {
-        return javaProcess.waitFor();
-    };
+	/**
+	 * Waits for the proess to terminate.
+	 * 
+	 * @return the exit code.
+	 */
+	this.waitFor = function() {
+		return javaProcess.waitFor();
+	};
 
-    /**
-     * Waits for the proess to terminate or does it by itself.
-     * 
-     * @return the exit code.
-     */
-    this.waitForOrKill = function (millis) {
-        return javaProcess.waitForOrKill(millis);
-    };
+	/**
+	 * Waits for the proess to terminate or does it by itself.
+	 * 
+	 * @return the exit code.
+	 */
+	this.waitForOrKill = function(millis) {
+		return javaProcess.waitForOrKill(millis);
+	};
 }
 
 /**
@@ -87,51 +87,95 @@ function Process(javaProcess) {
  */
 function Shell() {
 
-    var javaShell = new RhoxShell();
+	var javaShell = new RhoxShell();
 
-    bindProperties(this, javaShell, ['dir', 'in', 'out', 'err', 'redirectErr',
-        'lineSeparator', 'charset']);
+	bindProperties(this, javaShell, [ 'dir', 'in', 'out', 'err', 'redirectErr',
+			'lineSeparator', 'charset' ]);
 
-    /**
-     * Launches the given command, which can be a String or a String[] directly
-     * from the commandline. IN, OUT, and ERR are redirected according to the
-     * configuration of this object, so by default all is sent to stdin, -out
-     * and -err.
-     * 
-     * @return a new process instance which allows waitFor() and destroy().
-     */
-    this.start = function (command, config) {
-        config = config ? new MapProcessContext(config) : null;
-        var javaProcess = javaShell.start(command, config);
-        return new Process(javaProcess);
-    };
+	// Additional setters as in MapProcessContext
+	Object.defineProperty(this, '&out', {
+		set : function(out) {
+			this.out = out;
+			this.redirectErr = true;
+		}
+	});
+	Object.defineProperty(this, '>>', {
+		set : function(file) {
+			this.out = Redirect.appendTo(file);
+		}
+	});
+	Object.defineProperty(this, '&>>', {
+		set : function(file){
+			this['>>'] = file;
+			this.redirectErr = true;
+		}
+	});
+	Object.defineProperty(this, '>', {
+		set : function(file){
+			this.out = Redirect.to(file);
+		}
+	});
+	Object.defineProperty(this, '&>', {
+		set : function(file){
+			this['>'] = file;
+			this.redirectErr = true;
+		}
+	});
+	Object.defineProperty(this, '<', {
+		set : function(file){
+			this['in'] = Redirect.from(file);
+		}
+	});
+	
+	/**
+	 * Launches the given command, which can be a String or a String[] directly
+	 * from the commandline. IN, OUT, and ERR are redirected according to the
+	 * configuration of this object, so by default all is sent to stdin, -out
+	 * and -err.
+	 * 
+	 * @return a new process instance which allows waitFor() and destroy().
+	 */
+	this.start = function(command, config) {
+		config = config ? new JsProcessContext(config) : null;
+		var javaProcess = javaShell.start(command, config);
+		return new Process(javaProcess);
+	};
 
-    /**
-     * Launches the given command, which can be a String or a String[], directly
-     * from the commandline and waits for its completion. IN, OUT, and ERR are
-     * redirected according to the configuration of this object, so by default
-     * all is sent to stdin, -out and -err.
-     * 
-     * @return the exit code of the command.
-     */
-    this.exec = function (command, config) {
-        var process = this.start(command, config);
-        return process.waitFor();
-    };
+	/**
+	 * Launches the given command, which can be a String or a String[], directly
+	 * from the commandline and waits for its completion. IN, OUT, and ERR are
+	 * redirected according to the configuration of this object, so by default
+	 * all is sent to stdin, -out and -err.
+	 * 
+	 * @return the exit code of the command.
+	 */
+	this.exec = function(command, config) {
+		var process = this.start(command, config);
+		return process.waitFor();
+	};
 }
 
-// Internal singleton shell implementation
+/**
+ * Internal default system shell - used for the global functions
+ */
 var SystemShell = new Shell();
-var System = {
-    exec: function (command, config) {
-        return SystemShell.exec(command, config);
-    },
-    start: function (command, config) {
-        return SystemShell.start(command, config);
-    }
-};
 
-// Global functions and objects
+/**
+ * Starts a new Process using the System defaults.
+ */
+function start(command, config) {
+	return SystemShell.start(command, config);
+}
+
+/**
+ * Executes an waits for a Process using the System defaults.
+ */
+function exec(command, config) {
+	return SystemShell.exec(command, config);
+}
+
+// Exports
 exports.Shell = Shell;
-exports.Redirect = ProcessRedirect;
-exports.System = System;
+exports.Redirect = Redirect;
+exports.exec = exec;
+exports.start = exec;

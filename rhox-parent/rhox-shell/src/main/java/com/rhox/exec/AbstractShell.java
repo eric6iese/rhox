@@ -29,24 +29,12 @@ class AbstractShell implements ProcessContext {
         return config.getIn();
     }
 
-    @Override
     public void setIn(Object in) {
         config.setIn(requireNonNull(in, "in"));
     }
 
-    @Override
-    public void setOut(Object out) {
-        config.setOut(requireNonNull(out, "out"));
-    }
-
-    @Override
     public Object getOut() {
         return config.getOut();
-    }
-
-    @Override
-    public void setErr(Object err) {
-        config.setErr(requireNonNull(err, "err"));
     }
 
     @Override
@@ -55,18 +43,8 @@ class AbstractShell implements ProcessContext {
     }
 
     @Override
-    public void setRedirectErr(Boolean redirectErr) {
-        config.setRedirectErr(requireNonNull(redirectErr, "redirectErr"));
-    }
-
-    @Override
     public Boolean getRedirectErr() {
         return config.getRedirectErr();
-    }
-
-    @Override
-    public void setDir(Object dir) {
-        config.setDir(requireNonNull(dir, "dir"));
     }
 
     @Override
@@ -75,22 +53,36 @@ class AbstractShell implements ProcessContext {
     }
 
     @Override
-    public void setLineSeparator(String lineSeparator) {
-        config.setLineSeparator(requireNonNull(lineSeparator, "lineSeparator"));
-    }
-
-    @Override
     public String getLineSeparator() {
         return config.getLineSeparator();
     }
 
     @Override
-    public void setCharset(Object charset) {
-        config.setCharset(requireNonNull(charset, "charset"));
-    }
-
-    @Override
     public Charset getCharset() {
         return config.getCharset();
+    }
+
+    public void setOut(Object out) {
+        config.setOut(requireNonNull(out, "out"));
+    }
+
+    public void setErr(Object err) {
+        config.setErr(requireNonNull(err, "err"));
+    }
+
+    public void setRedirectErr(Boolean redirectErr) {
+        config.setRedirectErr(requireNonNull(redirectErr, "redirectErr"));
+    }
+
+    public void setDir(Object dir) {
+        config.setDir(requireNonNull(dir, "dir"));
+    }
+
+    public void setLineSeparator(String lineSeparator) {
+        config.setLineSeparator(requireNonNull(lineSeparator, "lineSeparator"));
+    }
+
+    public void setCharset(Object charset) {
+        config.setCharset(requireNonNull(charset, "charset"));
     }
 }
