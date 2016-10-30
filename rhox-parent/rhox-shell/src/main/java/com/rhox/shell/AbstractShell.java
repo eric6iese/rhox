@@ -1,4 +1,4 @@
-package com.rhox.exec;
+package com.rhox.shell;
 
 import static java.util.Objects.requireNonNull;
 

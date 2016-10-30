@@ -1,7 +1,7 @@
-package com.rhox.exec;
+package com.rhox.shell;
 
-import static com.rhox.exec.ErrProgram.ERRORS;
-import static com.rhox.exec.ProcessUtils.LINE_SEPARATOR;
+import static com.rhox.shell.ErrProgram.ERRORS;
+import static com.rhox.shell.ProcessUtils.LINE_SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;

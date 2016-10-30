@@ -8,10 +8,10 @@ var classpath = require('rhox-classpath');
 var execModule = classpath.createModule();
 execModule.include(__dirname + '/lib/*.jar');
 
-var RhoxShell = execModule.type('com.rhox.exec.RhoxShell');
-var ProcessConfig = execModule.type('com.rhox.exec.ProcessConfig');
-var JsProcessContext = execModule.type('com.rhox.exec.MapProcessContext');
-var Redirect = execModule.type('com.rhox.exec.ProcessRedirect');
+var RhoxShell = execModule.type('com.rhox.shell.RhoxShell');
+var ProcessConfig = execModule.type('com.rhox.shell.ProcessConfig');
+var JsProcessContext = execModule.type('com.rhox.shell.MapProcessContext');
+var Redirect = execModule.type('com.rhox.shell.ProcessRedirect');
 
 /**
  * Binds all given String properties from this object to the other.

@@ -1,5 +1,6 @@
-package com.rhox.exec;
+package com.rhox.shell;
 
+import com.rhox.shell.RhoxShell;
 import java.util.List;
 
 import org.junit.Before;

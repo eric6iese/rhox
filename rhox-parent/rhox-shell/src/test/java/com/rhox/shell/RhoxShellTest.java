@@ -1,6 +1,10 @@
-package com.rhox.exec;
+package com.rhox.shell;
 
-import static com.rhox.exec.ProcessUtils.LINE_SEPARATOR;
+import com.rhox.shell.RhoxShell;
+import com.rhox.shell.RhoxProcess;
+import com.rhox.shell.ProcessConfig;
+import com.rhox.shell.ProcessRedirect;
+import static com.rhox.shell.ProcessUtils.LINE_SEPARATOR;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNull;
