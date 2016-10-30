@@ -29,10 +29,6 @@ class AbstractShell implements ProcessContext {
         return config.getIn();
     }
 
-    public void setIn(Object in) {
-        config.setIn(requireNonNull(in, "in"));
-    }
-
     public Object getOut() {
         return config.getOut();
     }
@@ -60,6 +56,10 @@ class AbstractShell implements ProcessContext {
     @Override
     public Charset getCharset() {
         return config.getCharset();
+    }
+
+    public void setIn(Object in) {
+        config.setIn(requireNonNull(in, "in"));
     }
 
     public void setOut(Object out) {
