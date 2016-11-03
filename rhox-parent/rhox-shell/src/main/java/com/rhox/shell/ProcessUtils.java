@@ -16,32 +16,50 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- *
- * @author giese
+ * Internal engine:<br/>
+ * Starts and runs the processes and pipes their in- and outputs.
  */
 final class ProcessUtils {
 
     static final String LINE_SEPARATOR = System.getProperty("line.separator");
     static final String USER_DIR = System.getProperty("user.dir");
 
-    private static ExecutorService EXEC = Executors.newCachedThreadPool();
+    /**
+     * All Threads for piping are derived from this pool which is automatically
+     * closed when the jvm terminates.
+     */
+    private static final ExecutorService EXEC;
 
     static {
+        ThreadGroup group = Thread.currentThread().getThreadGroup();
+        AtomicInteger id = new AtomicInteger();
+        EXEC = Executors.newCachedThreadPool(runnable -> {
+            Thread t = new Thread(group, runnable, "ProcessIO-" + id.incrementAndGet(), 0);
+            t.setDaemon(true);
+            if (t.getPriority() != Thread.NORM_PRIORITY) {
+                t.setPriority(Thread.NORM_PRIORITY);
+            }
+            return t;
+        });
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             EXEC.shutdown();
             try {
-                EXEC.awaitTermination(120, TimeUnit.SECONDS);
+                // there is no timeout until all io has been consumed
+                // (expect for an external interrupt)
+                EXEC.awaitTermination(Integer.MAX_VALUE, TimeUnit.SECONDS);
             } catch (InterruptedException ignored) {
                 // Cannot handle during shutdown!
+                // (even guava doesn't do anything here)
             }
-        } , "ExecutionShutdown"));
+        }, "ProcessIO-Shutdown"));
     }
 
     /**
-     * Starts a new Process from the commandline. The command is derived from the arguments, all of them are converted
-     * to strings, if necessary.
+     * Starts a new Process from the commandline. The command is derived from
+     * the arguments, all of them are converted to strings, if necessary.
      */
     public static RhoxProcess start(List<String> args, ProcessContext config) {
         ProcessBuilder processBuilder = new ProcessBuilder(args);
