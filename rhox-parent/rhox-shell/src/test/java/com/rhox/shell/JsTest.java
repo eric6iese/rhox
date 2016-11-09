@@ -62,6 +62,14 @@ public class JsTest {
     }
 
     @Test
+    public void callErrWithProcessStart() {
+        Object out = eval("var proc = start(" + cmdErr + ", {err: Redirect.PIPE, dir: '" + dir + "'});", "var lines = [];",
+                "proc.err.forEach(function(line){lines.push(line);});", "proc.waitFor();",
+                "Java.to(lines, 'java.util.List')");
+        assertThat(out).isEqualTo(ERRORS);
+    }
+
+    @Test
     public void testRedirectAliases() throws IOException {
         String arg = "blah";
         List<String> out = Arrays.asList(arg);

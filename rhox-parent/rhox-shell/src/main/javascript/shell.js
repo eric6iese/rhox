@@ -160,22 +160,24 @@ function Shell() {
  */
 var SystemShell = new Shell();
 
+// Exports
+
+/**
+* Shell class to create a shell with custom values
+*/
+exports.Shell = Shell;
+
+/**
+* Direct access to the redirect options.
+*/
+exports.Redirect = Redirect;
+
 /**
  * Starts a new Process using the System defaults.
  */
-function start(command, config) {
-	return SystemShell.start(command, config);
-}
+exports.start = SystemShell.start.bind(SystemShell);
 
 /**
  * Executes an waits for a Process using the System defaults.
  */
-function exec(command, config) {
-	return SystemShell.exec(command, config);
-}
-
-// Exports
-exports.Shell = Shell;
-exports.Redirect = Redirect;
-exports.exec = exec;
-exports.start = exec;
+exports.exec =  SystemShell.exec.bind(SystemShell);;
