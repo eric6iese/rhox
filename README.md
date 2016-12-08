@@ -16,7 +16,8 @@ var maven = require('rhox-maven');
 
 // Get slf4j from local repo or internet, including all transitives
 maven.include('org.slf4j:slf4j-simple:1.7.21');
-var log = org.slf4j.LoggerFactory.getLogger('bob');
+var LoggerFactory = Java.type('org.slf4j.LoggerFactory');
+var log = LoggerFactory.getLogger('bob');
 log.info('hello');
 ```
 
