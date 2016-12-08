@@ -9,7 +9,9 @@ This module allows for the easy-on demand adding of entries to the current class
 var classpath = require("rhox-classpath");
 
 // Adds all jars directly in the lib-folder to the classpath
-classpath.include('lib/*.jar');```
+classpath.include('lib/*.jar');
+```
+
 WHY?
 classpath solves the problem that javascript tends to maintain its dependencies via a dependency-system on-the-fly, while in java (se) traditionally all dependencies have to be defined in the classpath. In order to overcome this restriction, this class performs a mild hack on the classloader which should work at least in all jjs-scripts.
 In general, resolving dependencies via maven should be the preferred way, as it prevents duplicates much easier, but the manual file-style might be more useful if you design your own java-script-node-style modules which include java-bindings.
