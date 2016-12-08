@@ -50,4 +50,17 @@ try {
 }
 ```
 
+## rhox-shell
+Simple process execution in scripts, but way better than nashorn's $EXEC
+
+```javascript
+// this is windows example - sorry :-/
+var exec = require('rhox-shell').exec;
+// prints hello
+exec('cmd /c echo hello');
+// appends hello to local file out.txt.
+exec('cmd /c echo hello', { '>>': out.txt });
+```
+
+
 [More...](https://github.com/eric6iese/rhox/wiki)
