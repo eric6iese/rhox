@@ -80,6 +80,6 @@ maven.include('com.google.guava:guava:19.0',
         {group: 'junit', name: 'junit', version: '4.11'},
         {group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.8.0.RELEASE'});
 
-var log = org.slf4j.LoggerFactory.getLogger("hello");
+var log = Java.type("org.slf4j.LoggerFactory").getLogger("hello");
 
 log.info("WELL DONE!");

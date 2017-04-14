@@ -96,10 +96,6 @@ JavaModule.prototype.type = function (className) {
     }
 };
 
-/** Reflection-Hook for the add-url method. */
-var methodAddUrl = methodAddUrl = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-methodAddUrl.setAccessible(true);
-
 /**
  * Loads associated resolved Dependencies into the classpath.
  * @param classLoader must be an urlclassloader which will load the given files
@@ -124,7 +120,9 @@ var requireFiles = function (classLoader, files) {
         }
         // load the directory / jar
         log.log(DEBUG, "Add URL to classloader {0}: {1}", [classLoader, url]);
-        methodAddUrl.invoke(classLoader, url);
+
+        // works, of course, only with the rhoxloader
+        classLoader.addURL(url);
     });
 };
 
@@ -153,6 +151,27 @@ JavaModule.prototype.include = function () {
 
 JavaModule.prototype.include.resolve = resolvePath;
 
+// URLClassLoader extension which allows dynamic loading
+function newRhoxLoader(urls, classLoader) {
+    var RhoxLoader = Java.extend(URLClassLoader);
+    var rhoxLoader;
+    if (classLoader) {
+        rhoxLoader = new RhoxLoader(urls, classLoader){
+            addURL: function (url) {
+                Java.super(rhoxLoader).addURL(url);
+            }
+        };
+    } else {
+        rhoxLoader = new RhoxLoader(urls){
+            addURL: function (url) {
+                Java.super(rhoxLoader).addURL(url);
+            }
+        };
+    }
+    return rhoxLoader;
+}
+
+
 /**
  * Inspired by groovy, this 'hacks' into java's default url classloader to do some
  * magic. Note that this only ever works in simple scripts as jjs, since many
@@ -160,8 +179,7 @@ JavaModule.prototype.include.resolve = resolvePath;
  * a way that is no longer useable.
  */
 var RootModule = function () {
-    this._classLoader = Thread.currentThread().getContextClassLoader();
-    // some more code could be added which searches a matching url loader in the parent-classloaders
+    this._classLoader = newRhoxLoader([]);
 };
 RootModule.prototype = new JavaModule();
 
@@ -170,7 +188,7 @@ RootModule.prototype = new JavaModule();
  * These Modules can be instantiated manually by the RootLoader.
  */
 var ChildModule = function (parentClassLoader) {
-    this._classLoader = parentClassLoader ? new URLClassLoader([], parentClassLoader) : new URLClassLoader([]);
+    this._classLoader = parentClassLoader ? newRhoxLoader([], parentClassLoader) : newRhoxLoader([]);
 };
 ChildModule.prototype = new JavaModule();
 
@@ -184,4 +202,10 @@ JavaModule.prototype.createModule = function () {
     return new ChildModule(this._classLoader);
 };
 
-module.exports = new RootModule();
+var rootModule = new RootModule();
+
+// HACK: Replaces Java.type with the rhox loader to enable dynamic class loading
+// Currently its unclear if I will keep this
+Java.type = rootModule.type.bind(rootModule);
+
+module.exports = rootModule;
