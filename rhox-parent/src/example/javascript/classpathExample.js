@@ -43,7 +43,7 @@ maven.include({group: 'junit', name: 'junit', version: '4.11'});
 out.println("not even like this");
 maven.include('junit:junit:4.11');
 
-var Assert = Java.type("org.junit.Assert");
+var Assert = classpath.type("org.junit.Assert");
 
 Assert.assertTrue(true);
 

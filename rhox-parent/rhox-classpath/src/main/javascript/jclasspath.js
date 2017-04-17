@@ -202,10 +202,4 @@ JavaModule.prototype.createModule = function () {
     return new ChildModule(this._classLoader);
 };
 
-var rootModule = new RootModule();
-
-// HACK: Replaces Java.type with the rhox loader to enable dynamic class loading
-// Currently its unclear if I will keep this
-Java.type = rootModule.type.bind(rootModule);
-
-module.exports = rootModule;
+module.exports = new RootModule();
