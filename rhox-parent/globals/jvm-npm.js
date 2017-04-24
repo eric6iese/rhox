@@ -19,9 +19,10 @@
 module = (typeof module == 'undefined') ? {} :  module;
 
 (function() {
-  var System  = java.lang.System,
-      Scanner = java.util.Scanner,
-      File    = java.io.File;
+  var System  = Java.type('java.lang.System'),
+      Scanner = Java.type('java.util.Scanner'),
+      File    = Java.type('java.io.File'),
+	  Files = Java.type('java.nio.file.Files');
 
   NativeRequire = (typeof NativeRequire === 'undefined') ? {} : NativeRequire;
   if (typeof require === 'function' && !NativeRequire.require) {
@@ -53,16 +54,32 @@ module = (typeof module == 'undefined') ? {} :  module;
       return Require(id, this);
     }.bind(this);
   }
-
+  
   Module._load = function _load(file, parent, core, main) {
     var module = new Module(file, parent, core);
     var __FILENAME__ = module.filename;
-    var body   = readFile(module.filename, module.core),
-        dir    = new File(module.filename).getParent(),
-        args   = ['exports', 'module', 'require', '__filename', '__dirname'],
-        func   = new Function(args, body);
-    func.apply(module,
-        [module.exports, module, module.require, module.filename, dir]);
+    var body   = readFile(module.filename, module.core);
+    var dir    = new File(module.filename).getParent();
+
+    // set module temporarily on require function to read them in the script
+    // the nashorn-specific-'load'-Function is used to allow for a better 
+    // tool-support (debugging, stacktraces etc)
+    require['$$__MODULE__$$'] = module;
+    require['$$__MODULE_DIR__$$'] = dir;	
+    load({ name: module.filename, script: //
+        "(function(exports, module, require, __filename, __dirname){" +
+	body +
+        "\n}).call(" +
+	"require['$$__MODULE__$$'], " +	
+	"require['$$__MODULE__$$'].exports, " +
+	"require['$$__MODULE__$$'], " +
+	"require['$$__MODULE__$$'].require, " +
+	"require['$$__MODULE__$$'].filename, " +
+	"require['$$__MODULE_DIR__$$']);" +
+	"delete require['$$__MODULE__$$'];" +
+	"delete require['$$__MODULE_DIR__$$'];"
+    });
+    
     module.loaded = true;
     module.main = main;
     return module.exports;
@@ -162,7 +179,7 @@ module = (typeof module == 'undefined') ? {} :  module;
     if ( Require.NODE_PATH ) {
       r = r.concat( parsePaths( Require.NODE_PATH ) );
     } else {
-      var NODE_PATH = java.lang.System.getenv.NODE_PATH;
+      var NODE_PATH = java.lang.System.getenv("NODE_PATH");
       if ( NODE_PATH ) {
         r = r.concat( parsePaths( NODE_PATH ) );
       }
@@ -254,12 +271,13 @@ module = (typeof module == 'undefined') ? {} :  module;
     try {
       if (core) {
         var classloader = java.lang.Thread.currentThread().getContextClassLoader();
-        input = classloader.getResourceAsStream(filename);
+        input = classloader.getResourceAsStream(filename);		
+        // TODO: I think this is not very efficient
+        return new Scanner(input).useDelimiter("\\A").next();
       } else {
-        input = new File(filename);
+        input = new File(filename).toPath();
+		return new java.lang.String(Files.readAllBytes(input));
       }
-      // TODO: I think this is not very efficient
-      return new Scanner(input).useDelimiter("\\A").next();
     } catch(e) {
       throw new ModuleError("Cannot read file ["+input+"]: ", "IO_ERROR", e);
     }
